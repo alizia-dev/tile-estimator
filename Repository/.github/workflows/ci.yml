@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    services:
+      # Integration tests that need a real database run against this; the tenancy tests use the
+      # in-memory provider and do not.
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Str0ng!Passw0rd"
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Str0ng!Passw0rd' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        working-directory: backend
+        run: dotnet restore TileEstimator.slnx
+
+      - name: Build
+        working-directory: backend
+        run: dotnet build TileEstimator.slnx --no-restore --configuration Release
+
+      - name: Unit tests
+        working-directory: backend
+        run: >-
+          dotnet test tests/TileEstimator.UnitTests
+          --no-build --configuration Release --logger "trx;LogFileName=unit.trx"
+
+      # These guard the rules in docs/architecture.md: layering, no EF in Domain, no AI packages,
+      # no double for money. A violation should fail the build, not a code review.
+      - name: Architecture tests
+        working-directory: backend
+        run: >-
+          dotnet test tests/TileEstimator.ArchitectureTests
+          --no-build --configuration Release --logger "trx;LogFileName=architecture.trx"
+
+      - name: Integration tests
+        working-directory: backend
+        env:
+          Database__ConnectionString: "Server=localhost,1433;Database=TileEstimatorCi;User Id=sa;Password=Str0ng!Passw0rd;TrustServerCertificate=True"
+        run: >-
+          dotnet test tests/TileEstimator.IntegrationTests
+          --no-build --configuration Release --logger "trx;LogFileName=integration.trx"
+
+      - name: Verify migrations apply to a clean database
+        working-directory: backend
+        env:
+          Database__ConnectionString: "Server=localhost,1433;Database=TileEstimatorMigrations;User Id=sa;Password=Str0ng!Passw0rd;TrustServerCertificate=True"
+        run: |
+          dotnet tool install --global dotnet-ef
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet ef database update \
+            -p src/TileEstimator.Infrastructure \
+            -s src/TileEstimator.Api
+
+      - name: Publish API
+        working-directory: backend
+        run: >-
+          dotnet publish src/TileEstimator.Api
+          --no-build --configuration Release --output ../artifacts/api
+
+      - name: Upload API artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api
+          path: artifacts/api
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/**/TestResults/*.trx
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+
+      - name: Install
+        working-directory: front-end
+        run: npm ci
+
+      - name: Test
+        working-directory: front-end
+        run: npx ng test --watch=false
+
+      - name: Build
+        working-directory: front-end
+        run: npx ng build --configuration production
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: front-end/dist

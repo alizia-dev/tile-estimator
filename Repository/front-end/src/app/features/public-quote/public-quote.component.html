@@ -1,0 +1,260 @@
+@if (loading()) {
+  <div class="te-pq__centre">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (notFound()) {
+  <div class="te-pq__centre">
+    <div class="te-pq__card te-pq__card--message">
+      <mat-icon class="te-pq__big-icon">link_off</mat-icon>
+      <h1>This link is no longer valid</h1>
+      <p>
+        Quote links expire for security. Contact the contractor who sent it and ask them to
+        send you a new one.
+      </p>
+    </div>
+  </div>
+} @else if (quote(); as q) {
+  <div class="te-pq">
+    <!-- Company header -->
+    <header class="te-pq__header">
+      <div class="te-pq__company">
+        <h1 class="te-pq__company-name">{{ q.companyName }}</h1>
+        <div class="te-pq__company-meta">
+          @if (q.companyAddressLine) {
+            <span>{{ q.companyAddressLine }}</span>
+          }
+          @if (q.companyPhone) {
+            <span>{{ q.companyPhone }}</span>
+          }
+          @if (q.companyEmail) {
+            <span>{{ q.companyEmail }}</span>
+          }
+          @if (q.companyLicenseNumber) {
+            <span>License {{ q.companyLicenseNumber }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="te-pq__quote-meta">
+        <div class="te-pq__quote-label">Quote</div>
+        <div class="te-pq__quote-number">{{ q.quoteNumber }}</div>
+        <div class="te-pq__quote-dates">
+          {{ q.quoteDate | teDate }} · valid until {{ q.expiresAt | teDate }}
+        </div>
+      </div>
+    </header>
+
+    <!-- Status banners -->
+    @if (q.existingDecision) {
+      <div
+        class="te-pq__banner"
+        [class.te-pq__banner--success]="q.existingDecision.decision === 'Accepted'"
+        [class.te-pq__banner--danger]="q.existingDecision.decision === 'Rejected'"
+      >
+        <mat-icon>
+          {{ q.existingDecision.decision === 'Accepted' ? 'check_circle' : 'info' }}
+        </mat-icon>
+        <div>
+          <strong>
+            @switch (q.existingDecision.decision) {
+              @case ('Accepted') { You accepted this quote }
+              @case ('Rejected') { You declined this quote }
+              @default { You requested changes }
+            }
+          </strong>
+          <div>
+            Recorded for {{ q.existingDecision.customerName }} on
+            {{ q.existingDecision.decidedAt | teDate: true }}.
+          </div>
+        </div>
+      </div>
+    } @else if (q.isExpired) {
+      <div class="te-pq__banner te-pq__banner--danger">
+        <mat-icon>schedule</mat-icon>
+        <div>
+          <strong>This quote has expired</strong>
+          <div>Contact {{ q.companyName }} for an updated price.</div>
+        </div>
+      </div>
+    }
+
+    <!-- Headline total -->
+    <section class="te-pq__card te-pq__hero">
+      <div class="te-pq__hero-label">Prepared for {{ q.customerName }}</div>
+      @if (q.projectName) {
+        <h2 class="te-pq__project">{{ q.projectName }}</h2>
+      }
+      <div class="te-pq__hero-total">{{ q.grandTotal | teMoney: q.currency }}</div>
+      <div class="te-pq__hero-hint">Total including any applicable tax</div>
+    </section>
+
+    @if (q.scopeOfWork) {
+      <section class="te-pq__card">
+        <h3 class="te-pq__section-title">Scope of work</h3>
+        <p class="te-pq__scope">{{ q.scopeOfWork }}</p>
+      </section>
+    }
+
+    <!-- Lines -->
+    <section class="te-pq__card">
+      <h3 class="te-pq__section-title">What is included</h3>
+
+      <ul class="te-pq__lines">
+        @for (line of q.lines; track line.description + line.roomName) {
+          <li class="te-pq__line">
+            <div class="te-pq__line-main">
+              <div class="te-pq__line-description">{{ line.description }}</div>
+              <div class="te-pq__line-meta">
+                @if (line.roomName) {
+                  {{ line.roomName }} ·
+                }
+                {{ line.quantity | teQuantity: line.unit }} at
+                {{ line.unitPrice | teMoney: q.currency }}
+              </div>
+            </div>
+            <div class="te-pq__line-total">{{ line.totalPrice | teMoney: q.currency }}</div>
+          </li>
+        }
+      </ul>
+
+      <div class="te-pq__totals">
+        <div class="te-pq__total-row">
+          <span>Materials</span>
+          <span>{{ q.materialTotal | teMoney: q.currency }}</span>
+        </div>
+        <div class="te-pq__total-row">
+          <span>Labor</span>
+          <span>{{ q.laborTotal | teMoney: q.currency }}</span>
+        </div>
+        @if (q.otherTotal) {
+          <div class="te-pq__total-row">
+            <span>Other</span>
+            <span>{{ q.otherTotal | teMoney: q.currency }}</span>
+          </div>
+        }
+        <div class="te-pq__total-row te-pq__total-row--divider">
+          <span>Subtotal</span>
+          <span>{{ q.subtotal | teMoney: q.currency }}</span>
+        </div>
+        @if (q.discountAmount) {
+          <div class="te-pq__total-row te-pq__total-row--discount">
+            <span>Discount</span>
+            <span>−{{ q.discountAmount | teMoney: q.currency }}</span>
+          </div>
+        }
+        @if (q.taxAmount) {
+          <div class="te-pq__total-row">
+            <span>Tax</span>
+            <span>{{ q.taxAmount | teMoney: q.currency }}</span>
+          </div>
+        }
+        <div class="te-pq__total-row te-pq__total-row--grand">
+          <span>Total</span>
+          <span>{{ q.grandTotal | teMoney: q.currency }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Response -->
+    @if (q.canRespond) {
+      <section class="te-pq__card te-pq__respond">
+        <h3 class="te-pq__section-title">Your response</h3>
+
+        @if (error()) {
+          <div class="te-pq__banner te-pq__banner--danger" style="margin-bottom: 1rem">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        @if (!pendingDecision()) {
+          <p class="te-pq__respond-hint">
+            Let {{ q.companyName }} know how you would like to proceed.
+          </p>
+
+          <div class="te-pq__choices">
+            <button mat-flat-button color="primary" class="te-pq__choice" (click)="choose('Accepted')">
+              <mat-icon>check_circle</mat-icon>
+              Accept this quote
+            </button>
+            <button mat-stroked-button class="te-pq__choice" (click)="choose('ChangesRequested')">
+              <mat-icon>edit_note</mat-icon>
+              Request changes
+            </button>
+            <button mat-stroked-button class="te-pq__choice te-pq__choice--decline" (click)="choose('Rejected')">
+              <mat-icon>close</mat-icon>
+              Decline
+            </button>
+          </div>
+        } @else {
+          <p class="te-pq__respond-hint">
+            <strong>{{ decisionLabel(pendingDecision()!) }}</strong> — confirm your details below.
+          </p>
+
+          <form [formGroup]="responseForm" (ngSubmit)="submit()">
+            <mat-form-field appearance="outline" class="te-pq__field">
+              <mat-label>Your name</mat-label>
+              <input matInput formControlName="customerName" />
+              @if (responseForm.controls.customerName.touched && responseForm.controls.customerName.invalid) {
+                <mat-error>Please enter your name.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="te-pq__field">
+              <mat-label>Your email (optional)</mat-label>
+              <input matInput type="email" formControlName="customerEmail" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="te-pq__field">
+              <mat-label>
+                {{ pendingDecision() === 'ChangesRequested' ? 'What would you like changed?' : 'Comments (optional)' }}
+              </mat-label>
+              <textarea matInput formControlName="comments" rows="3"></textarea>
+              @if (responseForm.controls.comments.touched && responseForm.controls.comments.invalid) {
+                <mat-error>Tell us what you would like changed.</mat-error>
+              }
+            </mat-form-field>
+
+            <div class="te-pq__respond-actions">
+              <button mat-stroked-button type="button" (click)="pendingDecision.set(null)">
+                Back
+              </button>
+              <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+                @if (submitting()) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  Confirm
+                }
+              </button>
+            </div>
+          </form>
+
+          <p class="te-pq__legal">
+            Your response is recorded with the date and time. This confirms the scope and price
+            above; it is an approval record, not an electronic signature.
+          </p>
+        }
+      </section>
+    }
+
+    @if (q.termsAndConditions) {
+      <section class="te-pq__card">
+        <h3 class="te-pq__section-title">Terms and conditions</h3>
+        <p class="te-pq__terms">{{ q.termsAndConditions }}</p>
+      </section>
+    }
+
+    <footer class="te-pq__footer">
+      <button mat-stroked-button (click)="downloadPdf()">
+        <mat-icon>download</mat-icon>
+        Download PDF
+      </button>
+
+      @if (q.footerNote) {
+        <p class="te-pq__footer-note">{{ q.footerNote }}</p>
+      }
+
+      <p class="te-pq__footer-company">{{ q.companyName }}</p>
+    </footer>
+  </div>
+}

@@ -1,0 +1,189 @@
+<div class="te-page">
+  <header class="te-page__header">
+    <div>
+      <h1 class="te-page__title">Dashboard</h1>
+      <p class="te-page__subtitle">Where your work stands today.</p>
+    </div>
+    <div class="te-page__actions">
+      <a mat-stroked-button routerLink="/calculators">
+        <mat-icon>straighten</mat-icon>
+        Quick estimate
+      </a>
+      <a mat-flat-button color="primary" routerLink="/projects/new" *teHasPermission="'project.create'">
+        <mat-icon>add</mat-icon>
+        New project
+      </a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div style="display: flex; justify-content: center; padding: 4rem">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if (failed()) {
+    <div class="te-card te-empty-state">
+      <mat-icon class="te-empty-state__icon">cloud_off</mat-icon>
+      <p class="te-empty-state__title">The dashboard could not be loaded</p>
+      <p class="te-empty-state__text">Check your connection and try again.</p>
+      <button mat-stroked-button (click)="load()">Retry</button>
+    </div>
+  } @else if (data(); as dashboard) {
+    <!-- KPIs -->
+    <section class="te-grid te-grid--kpis" style="margin-bottom: 1.5rem">
+      <div class="te-card te-kpi">
+        <span class="te-kpi__label">Accepted quote value</span>
+        <span class="te-money te-money--total te-kpi__value te-kpi__value--accent">
+          {{ dashboard.kpis.acceptedQuoteValue | teMoney: dashboard.kpis.currency }}
+        </span>
+        <span class="te-kpi__hint">
+          {{ dashboard.kpis.quotesAccepted }} accepted of {{ dashboard.kpis.quotesSent }} sent
+        </span>
+      </div>
+
+      <div class="te-card te-kpi">
+        <span class="te-kpi__label">Total quoted</span>
+        <span class="te-money te-money--total te-kpi__value">
+          {{ dashboard.kpis.totalQuotedValue | teMoney: dashboard.kpis.currency }}
+        </span>
+        <span class="te-kpi__hint">Across every quote that has left the building</span>
+      </div>
+
+      <div class="te-card te-kpi">
+        <span class="te-kpi__label">Win rate</span>
+        <span class="te-money te-money--total te-kpi__value">
+          {{ dashboard.kpis.winRatePercentage | tePercent: 1 }}
+        </span>
+        <span class="te-kpi__hint">
+          {{ dashboard.kpis.quotesAccepted }} won, {{ dashboard.kpis.quotesRejected }} lost
+        </span>
+      </div>
+
+      <div class="te-card te-kpi">
+        <span class="te-kpi__label">Average estimate</span>
+        <span class="te-money te-money--total te-kpi__value">
+          {{ dashboard.kpis.averageEstimateValue | teMoney: dashboard.kpis.currency }}
+        </span>
+        <span class="te-kpi__hint">Finalized estimates only</span>
+      </div>
+    </section>
+
+    <section class="te-grid te-grid--kpis" style="margin-bottom: 1.5rem">
+      <div class="te-card te-kpi te-kpi--compact">
+        <span class="te-kpi__label">Active projects</span>
+        <span class="te-money te-money--large">{{ dashboard.kpis.activeProjects }}</span>
+        <span class="te-kpi__hint">of {{ dashboard.kpis.totalProjects }} total</span>
+      </div>
+      <div class="te-card te-kpi te-kpi--compact">
+        <span class="te-kpi__label">Draft estimates</span>
+        <span class="te-money te-money--large">{{ dashboard.kpis.draftEstimates }}</span>
+        <span class="te-kpi__hint">Waiting to be finished</span>
+      </div>
+      <div class="te-card te-kpi te-kpi--compact">
+        <span class="te-kpi__label">Quotes sent</span>
+        <span class="te-money te-money--large">{{ dashboard.kpis.quotesSent }}</span>
+        <span class="te-kpi__hint">Awaiting a customer decision</span>
+      </div>
+      <div class="te-card te-kpi te-kpi--compact">
+        <span class="te-kpi__label">Quotes rejected</span>
+        <span class="te-money te-money--large">{{ dashboard.kpis.quotesRejected }}</span>
+        <span class="te-kpi__hint">Worth a follow-up call</span>
+      </div>
+    </section>
+
+    <!-- Pipeline -->
+    <section class="te-card" style="margin-bottom: 1.5rem">
+      <h2 class="te-card__title">Quote pipeline</h2>
+      <div class="te-pipeline">
+        @for (stage of dashboard.quotePipeline; track stage.status) {
+          <div class="te-pipeline__row">
+            <span class="te-status" [class]="stage.status | teStatusClass">
+              {{ stage.status | teStatusLabel }}
+            </span>
+            <div class="te-pipeline__track">
+              <div class="te-pipeline__bar" [style.width]="barWidth(stage.count)"></div>
+            </div>
+            <span class="te-pipeline__count">{{ stage.count }}</span>
+            <span class="te-money te-pipeline__value">
+              {{ stage.value | teMoney: dashboard.kpis.currency }}
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Recent activity -->
+    <section class="te-grid te-grid--two">
+      <div class="te-card">
+        <h2 class="te-card__title">Recent projects</h2>
+        @if (dashboard.recentProjects.length === 0) {
+          <p class="te-muted">No projects yet.</p>
+        } @else {
+          <ul class="te-list">
+            @for (project of dashboard.recentProjects; track project.id) {
+              <li class="te-list__item">
+                <a [routerLink]="['/projects', project.id]" class="te-list__main">
+                  <span class="te-list__title">{{ project.name }}</span>
+                  <span class="te-list__meta">
+                    {{ project.projectNumber }} · {{ project.customerName }}
+                  </span>
+                </a>
+                <span class="te-status" [class]="project.status | teStatusClass">
+                  {{ project.status | teStatusLabel }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <div class="te-card">
+        <h2 class="te-card__title">Recent estimates</h2>
+        @if (dashboard.recentEstimates.length === 0) {
+          <p class="te-muted">No estimates yet.</p>
+        } @else {
+          <ul class="te-list">
+            @for (estimate of dashboard.recentEstimates; track estimate.id) {
+              <li class="te-list__item">
+                <a [routerLink]="['/estimates', estimate.id]" class="te-list__main">
+                  <span class="te-list__title">{{ estimate.displayNumber }}</span>
+                  <span class="te-list__meta">{{ estimate.projectName }}</span>
+                </a>
+                <span class="te-money te-list__amount">
+                  {{ estimate.grandTotal | teMoney: dashboard.kpis.currency }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <div class="te-card">
+        <h2 class="te-card__title">Recent quotes</h2>
+        @if (dashboard.recentQuotes.length === 0) {
+          <p class="te-muted">No quotes yet.</p>
+        } @else {
+          <ul class="te-list">
+            @for (quote of dashboard.recentQuotes; track quote.id) {
+              <li class="te-list__item">
+                <a [routerLink]="['/quotes', quote.id]" class="te-list__main">
+                  <span class="te-list__title">{{ quote.quoteNumber }}</span>
+                  <span class="te-list__meta">
+                    {{ quote.customerName }} · {{ quote.quoteDate | teDate }}
+                  </span>
+                </a>
+                <div class="te-list__trailing">
+                  <span class="te-money te-list__amount">
+                    {{ quote.grandTotal | teMoney: dashboard.kpis.currency }}
+                  </span>
+                  <span class="te-status" [class]="quote.status | teStatusClass">
+                    {{ quote.status | teStatusLabel }}
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+  }
+</div>

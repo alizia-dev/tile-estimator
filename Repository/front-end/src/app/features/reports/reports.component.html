@@ -1,0 +1,139 @@
+<div class="te-page">
+  <header class="te-page__header">
+    <div>
+      <h1 class="te-page__title">Reports</h1>
+      <p class="te-page__subtitle">How the business is doing, and where to find the detail.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div style="display: flex; justify-content: center; padding: 3rem">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else if (dashboard(); as d) {
+    <section class="te-grid te-grid--kpis" style="margin-bottom: 1.5rem">
+      <div class="te-card">
+        <span class="te-kpi-label">Quoted value</span>
+        <div class="te-money te-money--large">
+          {{ d.kpis.totalQuotedValue | teMoney: d.kpis.currency }}
+        </div>
+      </div>
+      <div class="te-card">
+        <span class="te-kpi-label">Accepted value</span>
+        <div class="te-money te-money--large" style="color: #15633a">
+          {{ d.kpis.acceptedQuoteValue | teMoney: d.kpis.currency }}
+        </div>
+      </div>
+      <div class="te-card">
+        <span class="te-kpi-label">Win rate</span>
+        <div class="te-money te-money--large">{{ d.kpis.winRatePercentage | tePercent: 1 }}</div>
+      </div>
+      <div class="te-card">
+        <span class="te-kpi-label">Average estimate</span>
+        <div class="te-money te-money--large">
+          {{ d.kpis.averageEstimateValue | teMoney: d.kpis.currency }}
+        </div>
+      </div>
+    </section>
+
+    <div class="te-grid te-grid--two">
+      <div class="te-card">
+        <h2 class="te-card__title">Quote summary</h2>
+        <div class="te-table-wrapper">
+          <table mat-table [dataSource]="quotes()" class="te-table">
+            <ng-container matColumnDef="number">
+              <th mat-header-cell *matHeaderCellDef>Quote</th>
+              <td mat-cell *matCellDef="let q">
+                <a [routerLink]="['/quotes', q.id]">{{ q.quoteNumber }}</a>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="customer">
+              <th mat-header-cell *matHeaderCellDef>Customer</th>
+              <td mat-cell *matCellDef="let q">{{ q.customerDisplayName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let q">
+                <span class="te-status" [class]="q.status | teStatusClass">
+                  {{ q.status | teStatusLabel }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Total</th>
+              <td mat-cell *matCellDef="let q" class="te-numeric te-money">
+                {{ q.grandTotal | teMoney: q.currency }}
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="quoteColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: quoteColumns"></tr>
+          </table>
+
+          @if (quotes().length === 0) {
+            <div class="te-table__empty">No quotes yet.</div>
+          }
+        </div>
+      </div>
+
+      <div class="te-card">
+        <h2 class="te-card__title">Estimate summary</h2>
+        <div class="te-table-wrapper">
+          <table mat-table [dataSource]="estimates()" class="te-table">
+            <ng-container matColumnDef="number">
+              <th mat-header-cell *matHeaderCellDef>Estimate</th>
+              <td mat-cell *matCellDef="let e">
+                <a [routerLink]="['/estimates', e.id]">{{ e.displayNumber }}</a>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="project">
+              <th mat-header-cell *matHeaderCellDef>Project</th>
+              <td mat-cell *matCellDef="let e">{{ e.projectName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let e">
+                <span class="te-status" [class]="e.status | teStatusClass">
+                  {{ e.status | teStatusLabel }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Total</th>
+              <td mat-cell *matCellDef="let e" class="te-numeric te-money">
+                {{ e.grandTotal | teMoney: e.currency }}
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="estimateColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: estimateColumns"></tr>
+          </table>
+
+          @if (estimates().length === 0) {
+            <div class="te-table__empty">No estimates yet.</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="te-card" style="margin-top: 1rem">
+      <h2 class="te-card__title">Per-project documents</h2>
+      <p class="te-muted" style="margin-top: 0">
+        The material takeoff, cost breakdown and purchase list are produced from a specific
+        estimate, where the figures and their working are already in front of you.
+      </p>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem">
+        <a mat-stroked-button routerLink="/estimates">
+          <mat-icon>calculate</mat-icon>
+          Open an estimate
+        </a>
+        <a mat-stroked-button routerLink="/projects">
+          <mat-icon>straighten</mat-icon>
+          Project takeoffs
+        </a>
+        <a mat-stroked-button routerLink="/quotes">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Customer proposals
+        </a>
+      </div>
+    </div>
+  }
+</div>

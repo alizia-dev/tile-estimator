@@ -1,0 +1,114 @@
+.te-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  opacity: 0.7;
+
+  a {
+    color: inherit;
+  }
+}
+
+.te-page__title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.te-quote-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.te-send-panel {
+  margin-bottom: 1.25rem;
+  border-color: var(--mat-sys-primary);
+}
+
+// --- Totals ----------------------------------------------------------------------------------
+
+.te-total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3125rem 0;
+  font-size: 0.875rem;
+}
+
+.te-total-row--divider {
+  margin-top: 0.25rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font-weight: 600;
+}
+
+.te-grand-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--mat-sys-primary);
+
+  > span:first-child {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+// --- Timeline ----------------------------------------------------------------------------------
+
+.te-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.te-timeline__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  // Steps that have not happened yet are dimmed, so the current state reads at a glance.
+  opacity: 0.45;
+
+  mat-icon {
+    margin-top: 0.125rem;
+  }
+}
+
+.te-timeline__item--done {
+  opacity: 1;
+}
+
+.te-recipient {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0;
+  font-size: 0.875rem;
+}
+
+.te-approval {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .te-quote-layout {
+    grid-template-columns: 1fr;
+  }
+}

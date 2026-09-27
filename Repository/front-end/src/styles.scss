@@ -1,0 +1,252 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
+/* You can add global styles to this file, and also import other style files */
+
+// ---------------------------------------------------------------------------------------------
+// Application styles.
+//
+// UX priorities from SPEC 21: fast data entry, clear totals, large readable numbers, and a
+// spreadsheet-style estimate grid. A contractor often reads these figures at arm's length on a
+// tablet, so money is set noticeably larger than surrounding text.
+// ---------------------------------------------------------------------------------------------
+
+* {
+  box-sizing: border-box;
+}
+
+.te-page {
+  max-width: 88rem;
+  margin: 0 auto;
+}
+
+.te-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.te-page__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.te-page__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+.te-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.te-card {
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.te-card__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.te-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.te-grid--kpis {
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.te-grid--two {
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+}
+
+// --- Numbers ----------------------------------------------------------------------------------
+
+.te-money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.te-money--total {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.te-money--large {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.te-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+// --- Status chips -------------------------------------------------------------------------------
+
+.te-status {
+  display: inline-block;
+  padding: 0.1875rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.te-status--success { background: #e3f5e8; color: #15633a; }
+.te-status--danger  { background: #fde8e8; color: #9b1c1c; }
+.te-status--info    { background: #e4effd; color: #14487f; }
+.te-status--warn    { background: #fff4e0; color: #8a5300; }
+.te-status--muted   { background: #eceef1; color: #55606e; }
+.te-status--neutral { background: #eceef1; color: #3b4450; }
+
+// --- Tables ---------------------------------------------------------------------------------------
+
+.te-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+}
+
+table.te-table {
+  width: 100%;
+}
+
+.te-table__empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  opacity: 0.65;
+}
+
+// --- Forms -----------------------------------------------------------------------------------------
+
+.te-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0 1rem;
+}
+
+.te-form-grid--narrow {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.te-field-full {
+  grid-column: 1 / -1;
+}
+
+.te-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+// --- Calculation breakdown --------------------------------------------------------------------------
+
+// The engine's own explanation of a number. Monospaced so the figures line up and a contractor
+// can check the arithmetic at a glance.
+.te-calculation {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  line-height: 1.5;
+}
+
+.te-empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.te-empty-state__icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  opacity: 0.35;
+}
+
+.te-empty-state__title {
+  margin: 0.75rem 0 0.25rem;
+  font-weight: 600;
+}
+
+.te-empty-state__text {
+  margin: 0 0 1rem;
+  opacity: 0.7;
+}
+
+.te-snackbar-error {
+  --mdc-snackbar-container-color: #8b1a1a;
+  --mdc-snackbar-supporting-text-color: #fff;
+}
+
+.te-muted {
+  opacity: 0.65;
+}
+
+.te-inline-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: text-bottom;
+}
+
+@media (prefers-color-scheme: dark) {
+  .te-status--success { background: #123524; color: #86e0ab; }
+  .te-status--danger  { background: #3a1616; color: #f2a7a7; }
+  .te-status--info    { background: #10263f; color: #9dc8f5; }
+  .te-status--warn    { background: #3a2a10; color: #ffd9a0; }
+  .te-status--muted,
+  .te-status--neutral { background: #242830; color: #b6bfcc; }
+}

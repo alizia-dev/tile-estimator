@@ -1,0 +1,35 @@
+.te-tab-body {
+  padding-top: 1.25rem;
+}
+
+.te-settings-section {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.te-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  mat-form-field {
+    min-width: 13rem;
+    flex: 1 1 13rem;
+  }
+
+  button {
+    margin-top: 0.5rem;
+  }
+}
+
+// A bare select inside the table cell, so changing someone's role is one click rather than a
+// trip through an edit dialog.
+.te-role-select {
+  min-width: 8rem;
+  font-size: 0.875rem;
+}

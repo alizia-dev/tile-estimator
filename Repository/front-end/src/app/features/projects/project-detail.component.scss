@@ -1,0 +1,247 @@
+.te-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  opacity: 0.7;
+
+  a {
+    color: inherit;
+  }
+}
+
+.te-tab-body {
+  padding-top: 1.25rem;
+}
+
+.te-kpi-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 0.125rem;
+}
+
+.te-detail-list {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+
+  dt {
+    font-size: 0.8125rem;
+    opacity: 0.65;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+// A single row of fields so adding a room is one line of typing, not a dialog.
+.te-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  mat-form-field {
+    min-width: 12rem;
+    flex: 1 1 12rem;
+  }
+
+  button {
+    margin-top: 0.5rem;
+  }
+}
+
+// --- Rooms and surfaces -------------------------------------------------------------------------
+
+.te-room {
+  margin-bottom: 1rem;
+}
+
+.te-room__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.te-room__name {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.te-room__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.te-surfaces {
+  display: flex;
+  flex-direction: column;
+}
+
+.te-surface {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.te-surface__main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.te-surface__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+// The measurements are what an estimator scans for, so they are set larger than the labels.
+.te-surface__dims {
+  margin-top: 0.125rem;
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.te-surface__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  opacity: 0.75;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+}
+
+.te-surface__actions {
+  display: flex;
+  gap: 0.125rem;
+  flex: 0 0 auto;
+}
+
+.te-openings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+// Deductions and additions read differently, because mixing them up changes the tile count.
+.te-opening {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.25rem 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: #fde8e8;
+  color: #9b1c1c;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.te-opening--adds {
+  background: #e3f5e8;
+  color: #15633a;
+}
+
+.te-opening__remove {
+  width: 1.25rem;
+  height: 1.25rem;
+  line-height: 1.25rem;
+
+  mat-icon {
+    font-size: 0.875rem;
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+// --- Takeoff --------------------------------------------------------------------------------------
+
+.te-area-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+// --- Record lists ------------------------------------------------------------------------------------
+
+.te-record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.te-record {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.te-record__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+
+  &:hover .te-record__title {
+    text-decoration: underline;
+  }
+}
+
+.te-record__title {
+  font-weight: 600;
+}
+
+.te-record__meta {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+@media (prefers-color-scheme: dark) {
+  .te-opening {
+    background: #3a1616;
+    color: #f2a7a7;
+  }
+
+  .te-opening--adds {
+    background: #123524;
+    color: #86e0ab;
+  }
+}

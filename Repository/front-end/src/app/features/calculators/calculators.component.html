@@ -1,0 +1,502 @@
+<div class="te-page">
+  <header class="te-page__header">
+    <div>
+      <h1 class="te-page__title">Quick estimators</h1>
+      <p class="te-page__subtitle">
+        Fast answers without creating a project. These use the same calculation engine as a full
+        estimate, so the numbers match.
+      </p>
+    </div>
+  </header>
+
+  <div class="te-calc-layout">
+    <section>
+      <mat-tab-group animationDuration="150ms" (selectedTabChange)="onTabChange()">
+        <!-- Floor -->
+        <mat-tab label="Floor">
+          <form [formGroup]="floorForm" (ngSubmit)="calculateFloor()" class="te-calc-form">
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Length (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="lengthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Width (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="widthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Trim (LF)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="trimLinearFeet" />
+              </mat-form-field>
+            </div>
+
+            <ng-container
+              *ngTemplateOutlet="selections; context: { form: floorForm, tileLabel: 'Tile' }"
+            />
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="calculating()">
+              <mat-icon>calculate</mat-icon>
+              Calculate floor
+            </button>
+          </form>
+        </mat-tab>
+
+        <!-- Wall -->
+        <mat-tab label="Wall">
+          <form [formGroup]="wallForm" (ngSubmit)="calculateWall()" class="te-calc-form">
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Wall length (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="lengthFeet" />
+                <mat-hint>Add the runs together for several walls.</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="heightFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Door width (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="doorWidthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Door height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="doorHeightFeet" />
+              </mat-form-field>
+            </div>
+
+            <ng-container
+              *ngTemplateOutlet="selections; context: { form: wallForm, tileLabel: 'Tile' }"
+            />
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="calculating()">
+              <mat-icon>calculate</mat-icon>
+              Calculate wall
+            </button>
+          </form>
+        </mat-tab>
+
+        <!-- Backsplash -->
+        <mat-tab label="Backsplash">
+          <form [formGroup]="backsplashForm" (ngSubmit)="calculateBacksplash()" class="te-calc-form">
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Run length (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="lengthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="heightFeet" />
+                <mat-hint>18 inches is 1.5 ft.</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <ng-container
+              *ngTemplateOutlet="selections; context: { form: backsplashForm, tileLabel: 'Tile' }"
+            />
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="calculating()">
+              <mat-icon>calculate</mat-icon>
+              Calculate backsplash
+            </button>
+          </form>
+        </mat-tab>
+
+        <!-- Shower -->
+        <mat-tab label="Shower">
+          <form [formGroup]="showerForm" (ngSubmit)="calculateShower()" class="te-calc-form">
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Width (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="widthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Depth (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="depthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Wall height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="wallHeightFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Door width (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="doorWidthFeet" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Door height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="doorHeightFeet" />
+              </mat-form-field>
+            </div>
+
+            <div class="te-form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Floor tile</mat-label>
+                <mat-select formControlName="floorTileId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (tile of tiles(); track tile.id) {
+                    <mat-option [value]="tile.id">{{ tile.productName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Wall tile</mat-label>
+                <mat-select formControlName="wallTileId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (tile of tiles(); track tile.id) {
+                    <mat-option [value]="tile.id">{{ tile.productName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Floor assembly</mat-label>
+                <mat-select formControlName="floorAssemblyId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (assembly of assemblies(); track assembly.id) {
+                    <mat-option [value]="assembly.id">{{ assembly.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Wall assembly</mat-label>
+                <mat-select formControlName="wallAssemblyId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (assembly of assemblies(); track assembly.id) {
+                    <mat-option [value]="assembly.id">{{ assembly.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Pattern</mat-label>
+                <mat-select formControlName="patternId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (pattern of patterns(); track pattern.id) {
+                    <mat-option [value]="pattern.id">
+                      {{ pattern.name }} ({{ pattern.defaultWastePercentage }}%)
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Waste override (%)</mat-label>
+                <input matInput type="number" step="0.1" min="0" formControlName="wasteOverridePercentage" />
+              </mat-form-field>
+            </div>
+
+            <div class="te-calc-options">
+              <mat-checkbox formControlName="includeNiche">Include a niche</mat-checkbox>
+              <mat-checkbox formControlName="includeBench">Include a bench</mat-checkbox>
+            </div>
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="calculating()">
+              <mat-icon>calculate</mat-icon>
+              Calculate shower
+            </button>
+          </form>
+        </mat-tab>
+
+        <!-- Bathroom -->
+        <mat-tab label="Bathroom">
+          <form [formGroup]="bathroomForm" (ngSubmit)="calculateBathroom()" class="te-calc-form">
+            <h3 class="te-calc-section">Floor</h3>
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Length (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="floorLengthFeet" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Width (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0.01" formControlName="floorWidthFeet" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Floor tile</mat-label>
+                <mat-select formControlName="floorTileId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (tile of tiles(); track tile.id) {
+                    <mat-option [value]="tile.id">{{ tile.productName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Floor assembly</mat-label>
+                <mat-select formControlName="floorAssemblyId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (assembly of assemblies(); track assembly.id) {
+                    <mat-option [value]="assembly.id">{{ assembly.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <h3 class="te-calc-section">Walls (optional)</h3>
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Total wall run (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="wallLengthFeet" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Wall height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="wallHeightFeet" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Wall tile</mat-label>
+                <mat-select formControlName="wallTileId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (tile of tiles(); track tile.id) {
+                    <mat-option [value]="tile.id">{{ tile.productName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Wall assembly</mat-label>
+                <mat-select formControlName="wallAssemblyId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (assembly of assemblies(); track assembly.id) {
+                    <mat-option [value]="assembly.id">{{ assembly.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <h3 class="te-calc-section">Shower</h3>
+            <mat-checkbox formControlName="includeShower" style="margin-bottom: 0.75rem">
+              Include a shower
+            </mat-checkbox>
+
+            @if (bathroomForm.controls.includeShower.value) {
+              <div class="te-form-grid te-form-grid--narrow">
+                <mat-form-field appearance="outline">
+                  <mat-label>Width (ft)</mat-label>
+                  <input matInput type="number" step="0.01" min="0.01" formControlName="showerWidthFeet" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Depth (ft)</mat-label>
+                  <input matInput type="number" step="0.01" min="0.01" formControlName="showerDepthFeet" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Wall height (ft)</mat-label>
+                  <input matInput type="number" step="0.01" min="0.01" formControlName="showerWallHeightFeet" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Shower floor tile</mat-label>
+                  <mat-select formControlName="showerFloorTileId">
+                    <mat-option [value]="null">None</mat-option>
+                    @for (tile of tiles(); track tile.id) {
+                      <mat-option [value]="tile.id">{{ tile.productName }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Shower wall tile</mat-label>
+                  <mat-select formControlName="showerWallTileId">
+                    <mat-option [value]="null">None</mat-option>
+                    @for (tile of tiles(); track tile.id) {
+                      <mat-option [value]="tile.id">{{ tile.productName }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Shower wall assembly</mat-label>
+                  <mat-select formControlName="showerWallAssemblyId">
+                    <mat-option [value]="null">None</mat-option>
+                    @for (assembly of assemblies(); track assembly.id) {
+                      <mat-option [value]="assembly.id">{{ assembly.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            }
+
+            <h3 class="te-calc-section">Backsplash and pattern</h3>
+            <div class="te-form-grid te-form-grid--narrow">
+              <mat-form-field appearance="outline">
+                <mat-label>Backsplash run (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="backsplashLengthFeet" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Backsplash height (ft)</mat-label>
+                <input matInput type="number" step="0.01" min="0" formControlName="backsplashHeightFeet" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Pattern</mat-label>
+                <mat-select formControlName="patternId">
+                  <mat-option [value]="null">None</mat-option>
+                  @for (pattern of patterns(); track pattern.id) {
+                    <mat-option [value]="pattern.id">
+                      {{ pattern.name }} ({{ pattern.defaultWastePercentage }}%)
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Waste override (%)</mat-label>
+                <input matInput type="number" step="0.1" min="0" formControlName="wasteOverridePercentage" />
+              </mat-form-field>
+            </div>
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="calculating()">
+              <mat-icon>calculate</mat-icon>
+              Calculate bathroom
+            </button>
+          </form>
+        </mat-tab>
+      </mat-tab-group>
+    </section>
+
+    <!-- Result -->
+    <aside>
+      @if (calculating()) {
+        <div class="te-card" style="display: flex; justify-content: center; padding: 3rem">
+          <mat-spinner diameter="36" />
+        </div>
+      } @else if (error()) {
+        <div class="te-card" style="border-color: #d88; color: #9b1c1c">
+          <mat-icon class="te-inline-icon">error_outline</mat-icon>
+          {{ error() }}
+        </div>
+      } @else if (result(); as res) {
+        <div class="te-card te-result">
+          <h2 class="te-card__title">Result</h2>
+
+          <div class="te-result__headline">
+            <span class="te-kpi-label">Estimated price</span>
+            <div class="te-money te-money--total">{{ res.totalPrice | teMoney }}</div>
+            <span class="te-muted" style="font-size: 0.75rem">
+              Cost {{ res.totalCost | teMoney }} — before markup, overhead and tax
+            </span>
+          </div>
+
+          <div class="te-result__areas">
+            <div>
+              <span class="te-kpi-label">Net area</span>
+              <div>{{ res.totalNetAreaSquareFeet | teQuantity: 'SF' }}</div>
+            </div>
+            <div>
+              <span class="te-kpi-label">With waste</span>
+              <div>{{ res.totalAdjustedAreaSquareFeet | teQuantity: 'SF' }}</div>
+            </div>
+          </div>
+
+          @for (surface of res.surfaces; track surface.surfaceName) {
+            <div class="te-result__surface">
+              <h3>{{ surface.surfaceName }}</h3>
+              <p class="te-calculation">{{ surface.calculation }}</p>
+              <p class="te-calculation">{{ surface.wasteExplanation }}</p>
+            </div>
+          }
+
+          <div class="te-table-wrapper" style="margin-top: 0.75rem">
+            <table mat-table [dataSource]="res.lines" class="te-table">
+              <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Item</th>
+                <td mat-cell *matCellDef="let line">
+                  <div style="font-weight: 600">{{ line.description }}</div>
+                  <div class="te-calculation">{{ line.calculation }}</div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Calculated</th>
+                <td mat-cell *matCellDef="let line" class="te-numeric">
+                  {{ line.quantity | teQuantity: line.unit }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="purchase">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">To buy</th>
+                <td mat-cell *matCellDef="let line" class="te-numeric" style="font-weight: 600">
+                  {{ line.purchaseQuantity | teQuantity: line.unit }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="unitPrice">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Unit</th>
+                <td mat-cell *matCellDef="let line" class="te-numeric">
+                  {{ line.unitPrice | teMoney }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Total</th>
+                <td mat-cell *matCellDef="let line" class="te-numeric te-money">
+                  {{ line.totalPrice | teMoney }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="resultColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: resultColumns"></tr>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <div class="te-card te-empty-state">
+          <mat-icon class="te-empty-state__icon">straighten</mat-icon>
+          <p class="te-empty-state__title">Enter measurements</p>
+          <p class="te-empty-state__text">
+            Pick a calculator, fill in the dimensions and the result appears here with its
+            working shown.
+          </p>
+        </div>
+      }
+    </aside>
+  </div>
+</div>
+
+<!-- Shared tile / pattern / assembly selectors, reused by the simpler calculators. -->
+<ng-template #selections let-form="form" let-tileLabel="tileLabel">
+  <div class="te-form-grid" [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ tileLabel }}</mat-label>
+      <mat-select formControlName="tileId">
+        <mat-option [value]="null">None</mat-option>
+        @for (tile of tiles(); track tile.id) {
+          <mat-option [value]="tile.id">
+            {{ tile.productName }} — {{ tile.sqFtPerBox }} SF/box
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Pattern</mat-label>
+      <mat-select formControlName="patternId">
+        <mat-option [value]="null">None</mat-option>
+        @for (pattern of patterns(); track pattern.id) {
+          <mat-option [value]="pattern.id">
+            {{ pattern.name }} ({{ pattern.defaultWastePercentage }}% waste)
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Assembly</mat-label>
+      <mat-select formControlName="assemblyId">
+        <mat-option [value]="null">Tile only</mat-option>
+        @for (assembly of assemblies(); track assembly.id) {
+          <mat-option [value]="assembly.id">{{ assembly.name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Adds thinset, grout and labor.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Waste override (%)</mat-label>
+      <input matInput type="number" step="0.1" min="0" formControlName="wasteOverridePercentage" />
+      <mat-hint>Blank uses the pattern default.</mat-hint>
+    </mat-form-field>
+  </div>
+</ng-template>

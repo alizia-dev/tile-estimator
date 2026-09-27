@@ -1,0 +1,738 @@
+<div class="te-page">
+  <header class="te-page__header">
+    <div>
+      <h1 class="te-page__title">Catalog</h1>
+      <p class="te-page__subtitle">
+        Your tiles, materials, patterns, waste rules, labor rates and assemblies. Everything here
+        belongs to your organization alone.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div style="display: flex; justify-content: center; padding: 3rem">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else {
+    <mat-tab-group animationDuration="150ms" (selectedTabChange)="closeEditor()">
+      <!-- Tiles -->
+      <mat-tab [label]="'Tiles (' + tiles().length + ')'">
+        <div class="te-tab-body">
+          <div class="te-tab-actions" *teHasPermission="'catalog.manage'">
+            <button mat-flat-button color="primary" (click)="newTile()">
+              <mat-icon>add</mat-icon>
+              Add tile
+            </button>
+          </div>
+
+          @if (editorKind() === 'tile') {
+            <div class="te-card te-editor">
+              <h2 class="te-card__title">{{ editingId() ? 'Edit tile' : 'New tile' }}</h2>
+              <form [formGroup]="tileForm" (ngSubmit)="saveTile()">
+                <div class="te-form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>SKU</mat-label>
+                    <input matInput formControlName="sku" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Product name</mat-label>
+                    <input matInput formControlName="productName" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Brand</mat-label>
+                    <input matInput formControlName="brand" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Collection</mat-label>
+                    <input matInput formControlName="collection" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Material</mat-label>
+                    <mat-select formControlName="materialType">
+                      <mat-option value="Porcelain">Porcelain</mat-option>
+                      <mat-option value="Ceramic">Ceramic</mat-option>
+                      <mat-option value="NaturalStone">Natural stone</mat-option>
+                      <mat-option value="Glass">Glass</mat-option>
+                      <mat-option value="Mosaic">Mosaic</mat-option>
+                      <mat-option value="Marble">Marble</mat-option>
+                      <mat-option value="Granite">Granite</mat-option>
+                      <mat-option value="Travertine">Travertine</mat-option>
+                      <mat-option value="Slate">Slate</mat-option>
+                      <mat-option value="Other">Other</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="te-form-grid te-form-grid--narrow">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Length (in)</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="lengthInches" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Width (in)</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="widthInches" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tiles per box</mat-label>
+                    <input matInput type="number" step="1" min="1" formControlName="tilesPerBox" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>SF per box override</mat-label>
+                    <input matInput type="number" step="0.0001" formControlName="sqFtPerBoxOverride" />
+                    <mat-hint>Only for mosaic sheets or mixed kits.</mat-hint>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Cost / SF</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="costPerSqFt" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Price / SF</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="sellingPricePerSqFt" />
+                  </mat-form-field>
+                </div>
+
+                <mat-checkbox formControlName="active">Active</mat-checkbox>
+
+                <div class="te-form-actions">
+                  <button mat-stroked-button type="button" (click)="closeEditor()">Cancel</button>
+                  <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                    Save tile
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <div class="te-table-wrapper">
+            <table mat-table [dataSource]="tiles()" class="te-table">
+              <ng-container matColumnDef="sku">
+                <th mat-header-cell *matHeaderCellDef>SKU</th>
+                <td mat-cell *matCellDef="let tile">{{ tile.sku }}</td>
+              </ng-container>
+              <ng-container matColumnDef="product">
+                <th mat-header-cell *matHeaderCellDef>Product</th>
+                <td mat-cell *matCellDef="let tile">
+                  <div style="font-weight: 600">{{ tile.productName }}</div>
+                  <div class="te-muted" style="font-size: 0.75rem">
+                    {{ tile.brand }} {{ tile.materialType | teStatusLabel }}
+                  </div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="size">
+                <th mat-header-cell *matHeaderCellDef>Size</th>
+                <td mat-cell *matCellDef="let tile">
+                  {{ tile.lengthInches }}″ × {{ tile.widthInches }}″
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="coverage">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Per box</th>
+                <td mat-cell *matCellDef="let tile" class="te-numeric">
+                  {{ tile.sqFtPerBox | teQuantity: 'SF' }}
+                  <div class="te-muted" style="font-size: 0.75rem">{{ tile.tilesPerBox }} tiles</div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="cost">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Cost/SF</th>
+                <td mat-cell *matCellDef="let tile" class="te-numeric">{{ tile.costPerSqFt | teMoney }}</td>
+              </ng-container>
+              <ng-container matColumnDef="price">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Price/SF</th>
+                <td mat-cell *matCellDef="let tile" class="te-numeric" style="font-weight: 600">
+                  {{ tile.sellingPricePerSqFt | teMoney }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="active">
+                <th mat-header-cell *matHeaderCellDef>Active</th>
+                <td mat-cell *matCellDef="let tile">
+                  @if (tile.active) {
+                    <mat-icon class="te-inline-icon" style="color: #15633a">check_circle</mat-icon>
+                  } @else {
+                    <span class="te-muted">No</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let tile">
+                  <div *teHasPermission="'catalog.manage'">
+                    <button mat-icon-button (click)="editTile(tile)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteTile(tile)" matTooltip="Remove">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="tileColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: tileColumns"></tr>
+            </table>
+
+            @if (tiles().length === 0) {
+              <div class="te-table__empty">No tiles yet. Add the ones you install most.</div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Materials -->
+      <mat-tab [label]="'Materials (' + materials().length + ')'">
+        <div class="te-tab-body">
+          <div class="te-tab-actions" *teHasPermission="'catalog.manage'">
+            <button mat-flat-button color="primary" (click)="newMaterial()">
+              <mat-icon>add</mat-icon>
+              Add material
+            </button>
+          </div>
+
+          @if (editorKind() === 'material') {
+            <div class="te-card te-editor">
+              <h2 class="te-card__title">{{ editingId() ? 'Edit material' : 'New material' }}</h2>
+              <form [formGroup]="materialForm" (ngSubmit)="saveMaterial()">
+                <div class="te-form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>SKU</mat-label>
+                    <input matInput formControlName="sku" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Category</mat-label>
+                    <mat-select formControlName="category">
+                      <mat-option value="Thinset">Thinset</mat-option>
+                      <mat-option value="Grout">Grout</mat-option>
+                      <mat-option value="BackerBoard">Backer board</mat-option>
+                      <mat-option value="WaterproofingMembrane">Waterproofing</mat-option>
+                      <mat-option value="Sealer">Sealer</mat-option>
+                      <mat-option value="Caulk">Caulk</mat-option>
+                      <mat-option value="Primer">Primer</mat-option>
+                      <mat-option value="Adhesive">Adhesive</mat-option>
+                      <mat-option value="Trim">Trim</mat-option>
+                      <mat-option value="Bullnose">Bullnose</mat-option>
+                      <mat-option value="Spacers">Spacers</mat-option>
+                      <mat-option value="Other">Other</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Purchase unit</mat-label>
+                    <mat-select formControlName="unit">
+                      <mat-option value="BAG">Bag</mat-option>
+                      <mat-option value="SHEET">Sheet</mat-option>
+                      <mat-option value="GAL">Gallon</mat-option>
+                      <mat-option value="TUBE">Tube</mat-option>
+                      <mat-option value="ROLL">Roll</mat-option>
+                      <mat-option value="EA">Each</mat-option>
+                      <mat-option value="LF">Linear foot</mat-option>
+                      <mat-option value="SF">Square foot</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Coverage per unit</mat-label>
+                    <input matInput type="number" step="0.0001" formControlName="coverage" />
+                    <mat-hint>
+                      Square feet one unit covers. This is what the takeoff divides area by.
+                    </mat-hint>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Cost</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="cost" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Selling price</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="sellingPrice" />
+                  </mat-form-field>
+                </div>
+
+                <mat-checkbox formControlName="active">Active</mat-checkbox>
+
+                <div class="te-form-actions">
+                  <button mat-stroked-button type="button" (click)="closeEditor()">Cancel</button>
+                  <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                    Save material
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <div class="te-table-wrapper">
+            <table mat-table [dataSource]="materials()" class="te-table">
+              <ng-container matColumnDef="sku">
+                <th mat-header-cell *matHeaderCellDef>SKU</th>
+                <td mat-cell *matCellDef="let m">{{ m.sku }}</td>
+              </ng-container>
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let m" style="font-weight: 600">{{ m.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Category</th>
+                <td mat-cell *matCellDef="let m">{{ m.category | teStatusLabel }}</td>
+              </ng-container>
+              <ng-container matColumnDef="unit">
+                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                <td mat-cell *matCellDef="let m">{{ m.unit }}</td>
+              </ng-container>
+              <ng-container matColumnDef="coverage">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Coverage</th>
+                <td mat-cell *matCellDef="let m" class="te-numeric">
+                  {{ m.coverage ? (m.coverage | teQuantity: 'SF') : '—' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="cost">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Cost</th>
+                <td mat-cell *matCellDef="let m" class="te-numeric">{{ m.cost | teMoney }}</td>
+              </ng-container>
+              <ng-container matColumnDef="price">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Price</th>
+                <td mat-cell *matCellDef="let m" class="te-numeric" style="font-weight: 600">
+                  {{ m.sellingPrice | teMoney }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="active">
+                <th mat-header-cell *matHeaderCellDef>Active</th>
+                <td mat-cell *matCellDef="let m">
+                  @if (m.active) {
+                    <mat-icon class="te-inline-icon" style="color: #15633a">check_circle</mat-icon>
+                  } @else {
+                    <span class="te-muted">No</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let m">
+                  <div *teHasPermission="'catalog.manage'">
+                    <button mat-icon-button (click)="editMaterial(m)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteMaterial(m)" matTooltip="Remove">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="materialColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: materialColumns"></tr>
+            </table>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Patterns -->
+      <mat-tab [label]="'Patterns (' + patterns().length + ')'">
+        <div class="te-tab-body">
+          <p class="te-muted" style="margin-top: 0">
+            A pattern sets the starting waste percentage for a surface. These are yours to edit —
+            nothing in the system assumes an industry standard.
+          </p>
+
+          <div class="te-tab-actions" *teHasPermission="'catalog.manage'">
+            <button mat-flat-button color="primary" (click)="newPattern()">
+              <mat-icon>add</mat-icon>
+              Add pattern
+            </button>
+          </div>
+
+          @if (editorKind() === 'pattern') {
+            <div class="te-card te-editor">
+              <h2 class="te-card__title">{{ editingId() ? 'Edit pattern' : 'New pattern' }}</h2>
+              <form [formGroup]="patternForm" (ngSubmit)="savePattern()">
+                <div class="te-form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Default waste %</mat-label>
+                    <input matInput type="number" step="0.1" min="0" formControlName="defaultWastePercentage" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="te-field-full">
+                    <mat-label>Description</mat-label>
+                    <input matInput formControlName="description" />
+                  </mat-form-field>
+                </div>
+
+                <mat-checkbox formControlName="active">Active</mat-checkbox>
+
+                <div class="te-form-actions">
+                  <button mat-stroked-button type="button" (click)="closeEditor()">Cancel</button>
+                  <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                    Save pattern
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <div class="te-table-wrapper">
+            <table mat-table [dataSource]="patterns()" class="te-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Pattern</th>
+                <td mat-cell *matCellDef="let p">
+                  <div style="font-weight: 600">{{ p.name }}</div>
+                  <div class="te-muted" style="font-size: 0.75rem">{{ p.description }}</div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="waste">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Default waste</th>
+                <td mat-cell *matCellDef="let p" class="te-numeric" style="font-weight: 600">
+                  {{ p.defaultWastePercentage | tePercent }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="active">
+                <th mat-header-cell *matHeaderCellDef>Active</th>
+                <td mat-cell *matCellDef="let p">
+                  @if (p.active) {
+                    <mat-icon class="te-inline-icon" style="color: #15633a">check_circle</mat-icon>
+                  } @else {
+                    <span class="te-muted">No</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let p">
+                  <div *teHasPermission="'catalog.manage'">
+                    <button mat-icon-button (click)="editPattern(p)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deletePattern(p)" matTooltip="Remove">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="patternColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: patternColumns"></tr>
+            </table>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Waste rules -->
+      <mat-tab [label]="'Waste rules (' + wasteRules().length + ')'">
+        <div class="te-tab-body">
+          <p class="te-muted" style="margin-top: 0">
+            A rule is more specific than a pattern default. The most specific active match wins,
+            and an estimator's override on a surface beats both.
+          </p>
+
+          <div class="te-tab-actions" *teHasPermission="'catalog.manage'">
+            <button mat-flat-button color="primary" (click)="newWasteRule()">
+              <mat-icon>add</mat-icon>
+              Add rule
+            </button>
+          </div>
+
+          @if (editorKind() === 'wasteRule') {
+            <div class="te-card te-editor">
+              <h2 class="te-card__title">{{ editingId() ? 'Edit rule' : 'New rule' }}</h2>
+              <form [formGroup]="wasteRuleForm" (ngSubmit)="saveWasteRule()">
+                <div class="te-form-grid">
+                  <mat-form-field appearance="outline" class="te-field-full">
+                    <mat-label>Rule name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Pattern</mat-label>
+                    <mat-select formControlName="patternId">
+                      <mat-option [value]="null">Any</mat-option>
+                      @for (pattern of patterns(); track pattern.id) {
+                        <mat-option [value]="pattern.id">{{ pattern.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Surface type</mat-label>
+                    <mat-select formControlName="surfaceType">
+                      <mat-option [value]="null">Any</mat-option>
+                      <mat-option value="Floor">Floor</mat-option>
+                      <mat-option value="Wall">Wall</mat-option>
+                      <mat-option value="ShowerFloor">Shower floor</mat-option>
+                      <mat-option value="ShowerWall">Shower wall</mat-option>
+                      <mat-option value="Backsplash">Backsplash</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tile material</mat-label>
+                    <mat-select formControlName="tileMaterialType">
+                      <mat-option [value]="null">Any</mat-option>
+                      <mat-option value="Porcelain">Porcelain</mat-option>
+                      <mat-option value="Ceramic">Ceramic</mat-option>
+                      <mat-option value="NaturalStone">Natural stone</mat-option>
+                      <mat-option value="Marble">Marble</mat-option>
+                      <mat-option value="Mosaic">Mosaic</mat-option>
+                      <mat-option value="Glass">Glass</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Waste %</mat-label>
+                    <input matInput type="number" step="0.1" min="0" formControlName="wastePercentage" />
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Priority</mat-label>
+                    <input matInput type="number" step="1" formControlName="priority" />
+                    <mat-hint>Higher wins when two rules are equally specific.</mat-hint>
+                  </mat-form-field>
+                </div>
+
+                <mat-checkbox formControlName="active">Active</mat-checkbox>
+
+                <div class="te-form-actions">
+                  <button mat-stroked-button type="button" (click)="closeEditor()">Cancel</button>
+                  <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                    Save rule
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <div class="te-table-wrapper">
+            <table mat-table [dataSource]="wasteRules()" class="te-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Rule</th>
+                <td mat-cell *matCellDef="let r" style="font-weight: 600">{{ r.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="matches">
+                <th mat-header-cell *matHeaderCellDef>Applies to</th>
+                <td mat-cell *matCellDef="let r">{{ ruleMatches(r) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="waste">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Waste</th>
+                <td mat-cell *matCellDef="let r" class="te-numeric" style="font-weight: 600">
+                  {{ r.wastePercentage | tePercent }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="priority">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Priority</th>
+                <td mat-cell *matCellDef="let r" class="te-numeric">{{ r.priority }}</td>
+              </ng-container>
+              <ng-container matColumnDef="active">
+                <th mat-header-cell *matHeaderCellDef>Active</th>
+                <td mat-cell *matCellDef="let r">
+                  @if (r.active) {
+                    <mat-icon class="te-inline-icon" style="color: #15633a">check_circle</mat-icon>
+                  } @else {
+                    <span class="te-muted">No</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  <div *teHasPermission="'catalog.manage'">
+                    <button mat-icon-button (click)="editWasteRule(r)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteWasteRule(r)" matTooltip="Remove">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="wasteRuleColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: wasteRuleColumns"></tr>
+            </table>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Labor rates -->
+      <mat-tab [label]="'Labor (' + laborRates().length + ')'">
+        <div class="te-tab-body">
+          <div class="te-tab-actions" *teHasPermission="'catalog.manage'">
+            <button mat-flat-button color="primary" (click)="newLaborRate()">
+              <mat-icon>add</mat-icon>
+              Add labor rate
+            </button>
+          </div>
+
+          @if (editorKind() === 'laborRate') {
+            <div class="te-card te-editor">
+              <h2 class="te-card__title">{{ editingId() ? 'Edit labor rate' : 'New labor rate' }}</h2>
+              <form [formGroup]="laborRateForm" (ngSubmit)="saveLaborRate()">
+                <div class="te-form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Trade</mat-label>
+                    <input matInput formControlName="trade" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Unit</mat-label>
+                    <mat-select formControlName="unit">
+                      <mat-option value="SF">Square foot</mat-option>
+                      <mat-option value="LF">Linear foot</mat-option>
+                      <mat-option value="EA">Each</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Method</mat-label>
+                    <mat-select formControlName="calculationMethod">
+                      <mat-option value="UnitRate">Unit rate — qty × rate</mat-option>
+                      <mat-option value="Productivity">Productivity — qty ÷ per-hour × hourly</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>
+                      {{ laborRateForm.controls.calculationMethod.value === 'Productivity' ? 'Hourly rate' : 'Rate per unit' }}
+                    </mat-label>
+                    <input matInput type="number" step="0.01" formControlName="rate" />
+                  </mat-form-field>
+                  @if (laborRateForm.controls.calculationMethod.value === 'Productivity') {
+                    <mat-form-field appearance="outline">
+                      <mat-label>Units per hour</mat-label>
+                      <input matInput type="number" step="0.01" formControlName="productivity" />
+                    </mat-form-field>
+                  }
+                </div>
+
+                <mat-checkbox formControlName="active">Active</mat-checkbox>
+
+                <div class="te-form-actions">
+                  <button mat-stroked-button type="button" (click)="closeEditor()">Cancel</button>
+                  <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                    Save labor rate
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <div class="te-table-wrapper">
+            <table mat-table [dataSource]="laborRates()" class="te-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Operation</th>
+                <td mat-cell *matCellDef="let l" style="font-weight: 600">{{ l.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="trade">
+                <th mat-header-cell *matHeaderCellDef>Trade</th>
+                <td mat-cell *matCellDef="let l">{{ l.trade }}</td>
+              </ng-container>
+              <ng-container matColumnDef="method">
+                <th mat-header-cell *matHeaderCellDef>Method</th>
+                <td mat-cell *matCellDef="let l">
+                  {{ l.calculationMethod | teStatusLabel }}
+                  @if (l.productivity) {
+                    <div class="te-muted" style="font-size: 0.75rem">
+                      {{ l.productivity }} {{ l.unit }}/hr
+                    </div>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="rate">
+                <th mat-header-cell *matHeaderCellDef class="te-numeric">Rate</th>
+                <td mat-cell *matCellDef="let l" class="te-numeric" style="font-weight: 600">
+                  {{ l.rate | teMoney }}<span class="te-muted">/{{ l.calculationMethod === 'Productivity' ? 'hr' : l.unit }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="active">
+                <th mat-header-cell *matHeaderCellDef>Active</th>
+                <td mat-cell *matCellDef="let l">
+                  @if (l.active) {
+                    <mat-icon class="te-inline-icon" style="color: #15633a">check_circle</mat-icon>
+                  } @else {
+                    <span class="te-muted">No</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let l">
+                  <div *teHasPermission="'catalog.manage'">
+                    <button mat-icon-button (click)="editLaborRate(l)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteLaborRate(l)" matTooltip="Remove">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="laborColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: laborColumns"></tr>
+            </table>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Assemblies -->
+      <mat-tab [label]="'Assemblies (' + assemblies().length + ')'">
+        <div class="te-tab-body">
+          <p class="te-muted" style="margin-top: 0">
+            An assembly is a complete installation system. Applying one to a surface expands it
+            into tile, materials and labor in one step.
+          </p>
+
+          @for (assembly of assemblies(); track assembly.id) {
+            <div class="te-card" style="margin-bottom: 1rem">
+              <div class="te-assembly__header">
+                <div>
+                  <h3 style="margin: 0; font-size: 1.0625rem">{{ assembly.name }}</h3>
+                  <span class="te-muted" style="font-size: 0.8125rem">
+                    {{ assembly.description }}
+                    @if (assembly.appliesToSurfaceType) {
+                      · for {{ assembly.appliesToSurfaceType | teStatusLabel }}
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <ul class="te-assembly__items">
+                @for (item of assembly.items; track item.id) {
+                  <li>
+                    <mat-icon class="te-inline-icon">
+                      {{ item.usesSurfaceTile ? 'grid_on' : item.laborRateId ? 'construction' : 'inventory_2' }}
+                    </mat-icon>
+                    <span class="te-assembly__item-name">
+                      {{ item.usesSurfaceTile ? 'Surface tile' : item.materialName || item.laborRateName }}
+                    </span>
+                    <span class="te-muted te-assembly__item-method">
+                      {{ item.quantityMethod | teStatusLabel }}
+                      @if (item.factor !== 1) {
+                        × {{ item.factor }}
+                      }
+                      @if (item.coverageOverride) {
+                        · coverage {{ item.coverageOverride }}
+                      }
+                      @if (item.fixedQuantity) {
+                        · {{ item.fixedQuantity }} {{ item.unit }}
+                      }
+                    </span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (assemblies().length === 0) {
+            <div class="te-card te-empty-state">
+              <mat-icon class="te-empty-state__icon">layers</mat-icon>
+              <p class="te-empty-state__title">No assemblies</p>
+              <p class="te-empty-state__text">
+                Your organization normally starts with a set of these. Contact support if they are
+                missing.
+              </p>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

@@ -1,0 +1,106 @@
+<div class="te-shell">
+  <mat-toolbar class="te-shell__toolbar">
+    <button
+      mat-icon-button
+      class="te-shell__menu-button"
+      (click)="toggleSidenav()"
+      aria-label="Toggle navigation"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <a routerLink="/dashboard" class="te-shell__brand">
+      <mat-icon class="te-shell__brand-icon">grid_view</mat-icon>
+      <span class="te-shell__brand-text">Tile Estimator</span>
+    </a>
+
+    <span class="te-shell__spacer"></span>
+
+    @if (showOrganizationSwitcher()) {
+      <button mat-button [matMenuTriggerFor]="orgMenu" class="te-shell__org-button">
+        <mat-icon>business</mat-icon>
+        <span class="te-shell__org-name">{{ user()?.activeOrganizationName }}</span>
+        <mat-icon>arrow_drop_down</mat-icon>
+      </button>
+      <mat-menu #orgMenu="matMenu">
+        @for (org of organizations(); track org.organizationId) {
+          <button mat-menu-item (click)="switchOrganization(org.organizationId)">
+            @if (org.organizationId === user()?.activeOrganizationId) {
+              <mat-icon>check</mat-icon>
+            }
+            <span>{{ org.organizationName }}</span>
+            <span class="te-shell__org-role">{{ org.roleName }}</span>
+          </button>
+        }
+      </mat-menu>
+    } @else {
+      <span class="te-shell__org-static">{{ user()?.activeOrganizationName }}</span>
+    }
+
+    <button
+      mat-icon-button
+      [matMenuTriggerFor]="userMenu"
+      class="te-shell__avatar-button"
+      [matTooltip]="displayName()"
+      aria-label="Account menu"
+    >
+      <span class="te-shell__avatar">{{ initials() }}</span>
+    </button>
+
+    <mat-menu #userMenu="matMenu">
+      <div class="te-shell__user-header" mat-menu-item disabled>
+        <div class="te-shell__user-name">{{ displayName() }}</div>
+        <div class="te-shell__user-email">{{ user()?.email }}</div>
+        <div class="te-shell__user-role">{{ user()?.roleName }}</div>
+      </div>
+      <mat-divider />
+      <button mat-menu-item routerLink="/settings/profile">
+        <mat-icon>person</mat-icon>
+        <span>My profile</span>
+      </button>
+      <button mat-menu-item routerLink="/settings">
+        <mat-icon>settings</mat-icon>
+        <span>Organization settings</span>
+      </button>
+      <mat-divider />
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Sign out</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  @if (user() && !user()!.emailConfirmed) {
+    <div class="te-shell__banner" role="status">
+      <mat-icon>mark_email_unread</mat-icon>
+      <span>Confirm your email address to secure your account.</span>
+    </div>
+  }
+
+  <mat-sidenav-container class="te-shell__container">
+    <mat-sidenav
+      class="te-shell__sidenav"
+      [opened]="sidenavOpen()"
+      mode="side"
+      disableClose
+    >
+      <mat-nav-list>
+        @for (item of navItems(); track item.route) {
+          <a
+            mat-list-item
+            [routerLink]="item.route"
+            routerLinkActive="te-shell__nav-item--active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+          >
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="te-shell__content">
+      <router-outlet />
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

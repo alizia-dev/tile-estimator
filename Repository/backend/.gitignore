@@ -1,0 +1,8 @@
+bin/
+obj/
+*.user
+appsettings.Local.json
+storage/
+outbox/
+.vs/
+TestResults/

@@ -1,0 +1,489 @@
+@if (loading()) {
+  <div style="display: flex; justify-content: center; padding: 4rem">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (estimate(); as est) {
+  <div class="te-page te-page--wide">
+    <header class="te-page__header">
+      <div>
+        <div class="te-breadcrumb">
+          <a routerLink="/estimates">Estimates</a>
+          <span>/</span>
+          <a [routerLink]="['/projects', est.projectId]">{{ est.projectName }}</a>
+        </div>
+        <h1 class="te-page__title">
+          {{ est.displayNumber }}
+          <span class="te-status" [class]="est.status | teStatusClass">
+            {{ est.status | teStatusLabel }}
+          </span>
+        </h1>
+        <p class="te-page__subtitle">
+          {{ est.title || est.projectName }}
+          @if (est.finalizedAt) {
+            · finalized {{ est.finalizedAt | teDate: true }}
+          }
+        </p>
+      </div>
+
+      <div class="te-page__actions">
+        @if (versions().length > 1) {
+          <button mat-stroked-button [matMenuTriggerFor]="versionMenu">
+            <mat-icon>history</mat-icon>
+            Version {{ est.version }} of {{ versions().length }}
+          </button>
+          <mat-menu #versionMenu="matMenu">
+            @for (version of versions(); track version.id) {
+              <a mat-menu-item [routerLink]="['/estimates', version.id]">
+                <span>{{ version.displayNumber }}</span>
+                <span class="te-muted" style="margin-left: 0.75rem">
+                  {{ version.grandTotal | teMoney: version.currency }}
+                </span>
+              </a>
+            }
+          </mat-menu>
+        }
+
+        @if (isEditable()) {
+          <button mat-stroked-button (click)="rebuild()" [disabled]="busy()" *teHasPermission="'estimate.update'">
+            <mat-icon>autorenew</mat-icon>
+            Rebuild
+          </button>
+          <button mat-stroked-button (click)="recalculate()" [disabled]="busy()" *teHasPermission="'estimate.update'">
+            <mat-icon>refresh</mat-icon>
+            Recalculate
+          </button>
+          <button mat-flat-button color="primary" (click)="finalize()" [disabled]="busy()" *teHasPermission="'estimate.approve'">
+            <mat-icon>lock</mat-icon>
+            Finalize
+          </button>
+        } @else {
+          <button mat-stroked-button (click)="newVersion()" [disabled]="busy()" *teHasPermission="'estimate.create'">
+            <mat-icon>add</mat-icon>
+            New version
+          </button>
+          @if (est.status === 'Finalized') {
+            <button mat-flat-button color="primary" (click)="createQuote()" [disabled]="busy()" *teHasPermission="'quote.create'">
+              <mat-icon>request_quote</mat-icon>
+              Create quote
+            </button>
+          }
+        }
+      </div>
+    </header>
+
+    @if (!isEditable()) {
+      <div class="te-locked-banner">
+        <mat-icon class="te-inline-icon">lock</mat-icon>
+        <span>
+          This estimate is {{ est.status | teStatusLabel }} and cannot be changed.
+          Create a new version to make edits — the numbers here stay exactly as quoted.
+        </span>
+      </div>
+    }
+
+    <div class="te-estimate-layout">
+      <!-- Lines -->
+      <section>
+        <div class="te-table-wrapper">
+          <table mat-table [dataSource]="est.lines" class="te-table te-estimate-grid">
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Item</th>
+              <td mat-cell *matCellDef="let line">
+                @if (editingLineId() === line.id) {
+                  <input class="te-cell-input" [formControl]="editForm.controls.description" />
+                } @else {
+                  <div class="te-line-description">
+                    {{ line.description }}
+                    @if (line.isPriceOverridden) {
+                      <mat-icon
+                        class="te-inline-icon te-override-flag"
+                        [matTooltip]="
+                          'Price overridden from ' + line.originalUnitPrice +
+                          (line.overrideReason ? ' — ' + line.overrideReason : '')
+                        "
+                      >
+                        edit_note
+                      </mat-icon>
+                    }
+                  </div>
+                  @if (line.calculation) {
+                    <div class="te-calculation">{{ line.calculation }}</div>
+                  }
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="room">
+              <th mat-header-cell *matHeaderCellDef>Room</th>
+              <td mat-cell *matCellDef="let line">{{ line.roomName || '—' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef>Category</th>
+              <td mat-cell *matCellDef="let line">{{ line.category }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Qty</th>
+              <td mat-cell *matCellDef="let line" class="te-numeric">
+                @if (editingLineId() === line.id) {
+                  <input
+                    class="te-cell-input te-cell-input--numeric"
+                    type="number"
+                    step="0.0001"
+                    [formControl]="editForm.controls.quantity"
+                  />
+                } @else {
+                  <span [matTooltip]="'Calculated: ' + line.quantity">
+                    {{ (line.purchaseQuantity > 0 ? line.purchaseQuantity : line.quantity) | teQuantity }}
+                  </span>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="unit">
+              <th mat-header-cell *matHeaderCellDef>Unit</th>
+              <td mat-cell *matCellDef="let line">
+                @if (editingLineId() === line.id) {
+                  <input class="te-cell-input te-cell-input--short" [formControl]="editForm.controls.unit" />
+                } @else {
+                  {{ line.unit }}
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="unitCost">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Unit cost</th>
+              <td mat-cell *matCellDef="let line" class="te-numeric">
+                @if (editingLineId() === line.id) {
+                  <input
+                    class="te-cell-input te-cell-input--numeric"
+                    type="number"
+                    step="0.01"
+                    [formControl]="editForm.controls.unitCost"
+                  />
+                } @else {
+                  {{ line.unitCost | teMoney: est.currency }}
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="unitPrice">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Unit price</th>
+              <td mat-cell *matCellDef="let line" class="te-numeric">
+                @if (editingLineId() === line.id) {
+                  <input
+                    class="te-cell-input te-cell-input--numeric"
+                    type="number"
+                    step="0.01"
+                    [formControl]="editForm.controls.unitPrice"
+                  />
+                } @else {
+                  <span [class.te-overridden]="line.isPriceOverridden">
+                    {{ line.unitPrice | teMoney: est.currency }}
+                  </span>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="waste">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Waste</th>
+              <td mat-cell *matCellDef="let line" class="te-numeric">
+                {{ line.wastePercentage > 0 ? (line.wastePercentage | tePercent) : '—' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="totalCost">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Total cost</th>
+              <td mat-cell *matCellDef="let line" class="te-numeric te-muted">
+                {{ line.totalCost | teMoney: est.currency }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="totalPrice">
+              <th mat-header-cell *matHeaderCellDef class="te-numeric">Total price</th>
+              <td mat-cell *matCellDef="let line" class="te-numeric te-money" style="font-weight: 600">
+                {{ line.totalPrice | teMoney: est.currency }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let line">
+                @if (isEditable()) {
+                  @if (editingLineId() === line.id) {
+                    <button mat-icon-button (click)="saveEdit(line)" matTooltip="Save">
+                      <mat-icon>check</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="cancelEdit()" matTooltip="Cancel">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  } @else {
+                    <button mat-icon-button [matMenuTriggerFor]="lineMenu" *teHasPermission="'estimate.update'">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #lineMenu="matMenu">
+                      <button mat-menu-item (click)="startEdit(line)">
+                        <mat-icon>edit</mat-icon>
+                        <span>Edit line</span>
+                      </button>
+                      <button mat-menu-item (click)="duplicateLine(line)">
+                        <mat-icon>content_copy</mat-icon>
+                        <span>Duplicate</span>
+                      </button>
+                      <button mat-menu-item (click)="overridePrice(line)">
+                        <mat-icon>price_change</mat-icon>
+                        <span>Override price</span>
+                      </button>
+                      @if (line.isPriceOverridden) {
+                        <button mat-menu-item (click)="clearOverride(line)">
+                          <mat-icon>undo</mat-icon>
+                          <span>Restore calculated price</span>
+                        </button>
+                      }
+                      <button mat-menu-item (click)="deleteLine(line)">
+                        <mat-icon>delete_outline</mat-icon>
+                        <span>Delete line</span>
+                      </button>
+                    </mat-menu>
+                  }
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: columns"
+              [class.te-row--editing]="editingLineId() === row.id"
+            ></tr>
+          </table>
+
+          @if (est.lines.length === 0) {
+            <div class="te-table__empty">
+              This estimate has no lines yet. Rebuild it from the project, or add a line below.
+            </div>
+          }
+        </div>
+
+        @if (isEditable()) {
+          <div class="te-card" style="margin-top: 1rem" *teHasPermission="'estimate.update'">
+            <h2 class="te-card__title">Add a line</h2>
+            <form [formGroup]="lineForm" (ngSubmit)="addLine()" class="te-add-line">
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="description" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="category">
+                  <mat-option value="Tile">Tile</mat-option>
+                  <mat-option value="Material">Material</mat-option>
+                  <mat-option value="Labor">Labor</mat-option>
+                  <mat-option value="Equipment">Equipment</mat-option>
+                  <mat-option value="Delivery">Delivery</mat-option>
+                  <mat-option value="Other">Other</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Qty</mat-label>
+                <input matInput type="number" step="0.0001" formControlName="quantity" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <input matInput formControlName="unit" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Unit cost</mat-label>
+                <input matInput type="number" step="0.01" formControlName="unitCost" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Unit price</mat-label>
+                <input matInput type="number" step="0.01" formControlName="unitPrice" />
+              </mat-form-field>
+
+              <button mat-flat-button color="primary" type="submit" [disabled]="busy()">
+                <mat-icon>add</mat-icon>
+                Add
+              </button>
+            </form>
+          </div>
+        }
+      </section>
+
+      <!-- Totals and pricing -->
+      <aside class="te-totals-panel">
+        <div class="te-card te-totals">
+          <h2 class="te-card__title">Totals</h2>
+
+          <div class="te-total-row">
+            <span>Material cost</span>
+            <span class="te-money">{{ est.materialCost | teMoney: est.currency }}</span>
+          </div>
+          <div class="te-total-row">
+            <span>Labor cost</span>
+            <span class="te-money">{{ est.laborCost | teMoney: est.currency }}</span>
+          </div>
+          @if (est.otherCost) {
+            <div class="te-total-row">
+              <span>Other cost</span>
+              <span class="te-money">{{ est.otherCost | teMoney: est.currency }}</span>
+            </div>
+          }
+          @if (est.overheadAmount) {
+            <div class="te-total-row">
+              <span>Overhead ({{ est.overheadPercentage | tePercent }})</span>
+              <span class="te-money">{{ est.overheadAmount | teMoney: est.currency }}</span>
+            </div>
+          }
+
+          <div class="te-total-row te-total-row--divider">
+            <span>Total cost</span>
+            <span class="te-money">{{ est.totalCost | teMoney: est.currency }}</span>
+          </div>
+
+          <div class="te-total-row">
+            <span>
+              {{ est.pricingStrategy === 'Margin' ? 'Margin' : 'Markup' }}
+              @if (est.pricingStrategy === 'Markup') {
+                ({{ est.markupPercentage | tePercent }})
+              } @else if (est.pricingStrategy === 'Margin') {
+                ({{ est.marginPercentage | tePercent }})
+              }
+            </span>
+            <span class="te-money">{{ est.markupAmount | teMoney: est.currency }}</span>
+          </div>
+
+          <div class="te-total-row">
+            <span>Subtotal</span>
+            <span class="te-money">{{ est.subtotal | teMoney: est.currency }}</span>
+          </div>
+
+          @if (est.discountAmount) {
+            <div class="te-total-row te-total-row--discount">
+              <span>Discount</span>
+              <span class="te-money">−{{ est.discountAmount | teMoney: est.currency }}</span>
+            </div>
+          }
+
+          @if (est.taxAmount) {
+            <div class="te-total-row">
+              <span>Tax ({{ est.taxRatePercentage | tePercent }})</span>
+              <span class="te-money">{{ est.taxAmount | teMoney: est.currency }}</span>
+            </div>
+          }
+
+          <div class="te-grand-total">
+            <span>Total</span>
+            <span class="te-money te-money--total">{{ est.grandTotal | teMoney: est.currency }}</span>
+          </div>
+
+          <div class="te-profit">
+            <span>Gross profit</span>
+            <span class="te-money">
+              {{ est.grossProfit | teMoney: est.currency }}
+              <span class="te-muted">({{ est.grossMarginPercentage | tePercent: 1 }})</span>
+            </span>
+          </div>
+        </div>
+
+        @if (isEditable()) {
+          <div class="te-card" style="margin-top: 1rem" *teHasPermission="'estimate.update'">
+            <h2 class="te-card__title">Pricing</h2>
+
+            <form [formGroup]="pricingForm" (ngSubmit)="applyPricing()">
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Strategy</mat-label>
+                <mat-select formControlName="pricingStrategy">
+                  <mat-option value="Markup">Markup — cost × (1 + %)</mat-option>
+                  <mat-option value="Margin">Margin — cost ÷ (1 − %)</mat-option>
+                  <mat-option value="FixedMarkup">Fixed amount</mat-option>
+                </mat-select>
+                <mat-hint>Markup and margin give different prices for the same percentage.</mat-hint>
+              </mat-form-field>
+
+              @switch (pricingForm.controls.pricingStrategy.value) {
+                @case ('Markup') {
+                  <mat-form-field appearance="outline" style="width: 100%">
+                    <mat-label>Markup %</mat-label>
+                    <input matInput type="number" step="0.1" min="0" formControlName="markupPercentage" />
+                  </mat-form-field>
+                }
+                @case ('Margin') {
+                  <mat-form-field appearance="outline" style="width: 100%">
+                    <mat-label>Gross margin %</mat-label>
+                    <input matInput type="number" step="0.1" min="0" max="99.99" formControlName="marginPercentage" />
+                    <mat-hint>Must be below 100%.</mat-hint>
+                  </mat-form-field>
+                }
+                @case ('FixedMarkup') {
+                  <mat-form-field appearance="outline" style="width: 100%">
+                    <mat-label>Fixed markup amount</mat-label>
+                    <input matInput type="number" step="0.01" min="0" formControlName="fixedMarkupAmount" />
+                  </mat-form-field>
+                }
+              }
+
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Overhead %</mat-label>
+                <input matInput type="number" step="0.1" min="0" formControlName="overheadPercentage" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Discount</mat-label>
+                <mat-select formControlName="discountType">
+                  <mat-option value="None">None</mat-option>
+                  <mat-option value="Percentage">Percentage</mat-option>
+                  <mat-option value="FixedAmount">Fixed amount</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              @if (pricingForm.controls.discountType.value !== 'None') {
+                <mat-form-field appearance="outline" style="width: 100%">
+                  <mat-label>
+                    {{ pricingForm.controls.discountType.value === 'Percentage' ? 'Discount %' : 'Discount amount' }}
+                  </mat-label>
+                  <input matInput type="number" step="0.01" min="0" formControlName="discountValue" />
+                </mat-form-field>
+              }
+
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Tax rate %</mat-label>
+                <input matInput type="number" step="0.001" min="0" formControlName="taxRatePercentage" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Tax applies to</mat-label>
+                <mat-select formControlName="taxBasis">
+                  <mat-option value="MaterialsAndLabor">Materials and labor</mat-option>
+                  <mat-option value="MaterialsOnly">Materials only</mat-option>
+                  <mat-option value="LaborOnly">Labor only</mat-option>
+                </mat-select>
+                <mat-hint>US states differ on whether labor is taxable.</mat-hint>
+              </mat-form-field>
+
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                style="width: 100%; margin-top: 0.5rem"
+                [disabled]="busy()"
+              >
+                @if (busy()) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  Apply pricing
+                }
+              </button>
+            </form>
+          </div>
+        }
+      </aside>
+    </div>
+  </div>
+}

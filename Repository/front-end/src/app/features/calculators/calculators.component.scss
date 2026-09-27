@@ -1,0 +1,81 @@
+// Inputs on the left, result on the right, so an estimator can adjust a dimension and watch the
+// numbers change without scrolling.
+.te-calc-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.te-calc-form {
+  padding: 1.25rem;
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+.te-calc-section {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.te-calc-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.te-kpi-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.te-result__headline {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.te-result__areas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.0625rem;
+}
+
+.te-result__surface {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0.125rem 0;
+  }
+}
+
+@media (max-width: 1280px) {
+  .te-calc-layout {
+    grid-template-columns: 1fr;
+  }
+}

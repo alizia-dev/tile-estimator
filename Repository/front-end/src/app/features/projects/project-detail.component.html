@@ -1,0 +1,507 @@
+@if (loading()) {
+  <div style="display: flex; justify-content: center; padding: 4rem">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (project(); as proj) {
+  <div class="te-page">
+    <header class="te-page__header">
+      <div>
+        <div class="te-breadcrumb">
+          <a routerLink="/projects">Projects</a>
+          <span>/</span>
+          <span>{{ proj.projectNumber }}</span>
+        </div>
+        <h1 class="te-page__title">{{ proj.name }}</h1>
+        <p class="te-page__subtitle">
+          {{ proj.customerName }}
+          @if (proj.siteAddress) {
+            · {{ proj.siteAddress.singleLine }}
+          }
+        </p>
+      </div>
+
+      <div class="te-page__actions">
+        <button mat-stroked-button [matMenuTriggerFor]="statusMenu" *teHasPermission="'project.update'">
+          <span class="te-status" [class]="proj.status | teStatusClass">
+            {{ proj.status | teStatusLabel }}
+          </span>
+          <mat-icon>arrow_drop_down</mat-icon>
+        </button>
+        <mat-menu #statusMenu="matMenu">
+          @for (status of statuses; track status) {
+            <button mat-menu-item (click)="changeStatus(status)">
+              {{ status | teStatusLabel }}
+            </button>
+          }
+        </mat-menu>
+
+        <a mat-stroked-button [routerLink]="['edit']" *teHasPermission="'project.update'">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </a>
+
+        <button
+          mat-flat-button
+          color="primary"
+          (click)="createEstimate()"
+          [disabled]="creatingEstimate() || surfaceCount() === 0"
+          *teHasPermission="'estimate.create'"
+          matTooltip="Expands every surface through the takeoff, cost and pricing engines"
+        >
+          <mat-icon>calculate</mat-icon>
+          @if (creatingEstimate()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Create estimate
+          }
+        </button>
+      </div>
+    </header>
+
+    <mat-tab-group animationDuration="150ms">
+      <!-- Overview -->
+      <mat-tab label="Overview">
+        <div class="te-tab-body">
+          <div class="te-grid te-grid--two">
+            <div class="te-card">
+              <h2 class="te-card__title">Project</h2>
+              <dl class="te-detail-list">
+                <dt>Number</dt><dd>{{ proj.projectNumber }}</dd>
+                <dt>Type</dt><dd>{{ proj.type | teStatusLabel }}</dd>
+                <dt>Status</dt>
+                <dd>
+                  <span class="te-status" [class]="proj.status | teStatusClass">
+                    {{ proj.status | teStatusLabel }}
+                  </span>
+                </dd>
+                <dt>Rooms</dt><dd>{{ rooms().length }} ({{ surfaceCount() }} surfaces)</dd>
+                <dt>Start</dt><dd>{{ proj.startDate | teDate }}</dd>
+                <dt>Completion</dt><dd>{{ proj.estimatedCompletionDate | teDate }}</dd>
+                <dt>Created</dt><dd>{{ proj.createdAt | teDate: true }}</dd>
+              </dl>
+
+              @if (proj.description) {
+                <p style="margin-top: 1rem">{{ proj.description }}</p>
+              }
+            </div>
+
+            <div class="te-card">
+              <h2 class="te-card__title">Latest estimate</h2>
+              @if (proj.latestEstimateTotal !== null) {
+                <div class="te-money te-money--total">{{ proj.latestEstimateTotal | teMoney }}</div>
+                <p class="te-muted">{{ proj.latestEstimateNumber }}</p>
+              } @else {
+                <p class="te-muted">No estimate yet.</p>
+              }
+
+              <h2 class="te-card__title" style="margin-top: 1.5rem">Quote</h2>
+              @if (proj.latestQuoteStatus) {
+                <span class="te-status" [class]="proj.latestQuoteStatus | teStatusClass">
+                  {{ proj.latestQuoteStatus | teStatusLabel }}
+                </span>
+              } @else {
+                <p class="te-muted">No quote yet.</p>
+              }
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Rooms and surfaces -->
+      <mat-tab [label]="'Rooms (' + rooms().length + ')'">
+        <div class="te-tab-body">
+          <div class="te-card" style="margin-bottom: 1rem" *teHasPermission="'project.update'">
+            <h2 class="te-card__title">Add a room</h2>
+            <form [formGroup]="roomForm" (ngSubmit)="addRoom()" class="te-inline-form">
+              <mat-form-field appearance="outline">
+                <mat-label>Room name</mat-label>
+                <input matInput formControlName="name" placeholder="e.g. Master bathroom" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Type</mat-label>
+                <mat-select formControlName="type">
+                  <mat-option value="Bathroom">Bathroom</mat-option>
+                  <mat-option value="MasterBathroom">Master bathroom</mat-option>
+                  <mat-option value="Kitchen">Kitchen</mat-option>
+                  <mat-option value="LivingRoom">Living room</mat-option>
+                  <mat-option value="Bedroom">Bedroom</mat-option>
+                  <mat-option value="Shower">Shower</mat-option>
+                  <mat-option value="Backsplash">Backsplash</mat-option>
+                  <mat-option value="Entry">Entry</mat-option>
+                  <mat-option value="Laundry">Laundry</mat-option>
+                  <mat-option value="Custom">Custom</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-flat-button color="primary" type="submit">
+                <mat-icon>add</mat-icon>
+                Add room
+              </button>
+            </form>
+          </div>
+
+          @if (rooms().length === 0) {
+            <div class="te-card te-empty-state">
+              <mat-icon class="te-empty-state__icon">meeting_room</mat-icon>
+              <p class="te-empty-state__title">No rooms yet</p>
+              <p class="te-empty-state__text">
+                Add a room, then give it the surfaces you are tiling: floor, walls, shower, backsplash.
+              </p>
+            </div>
+          } @else {
+            @for (room of rooms(); track room.id) {
+              <div class="te-card te-room">
+                <div class="te-room__header">
+                  <div>
+                    <h3 class="te-room__name">{{ room.name }}</h3>
+                    <span class="te-muted">{{ room.type | teStatusLabel }}</span>
+                  </div>
+                  <div class="te-room__actions" *teHasPermission="'project.update'">
+                    <button mat-stroked-button (click)="addSurface(room)">
+                      <mat-icon>add</mat-icon>
+                      Add surface
+                    </button>
+                    <button mat-icon-button (click)="deleteRoom(room)" matTooltip="Delete room">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </div>
+
+                @if (room.surfaces.length === 0) {
+                  <p class="te-muted" style="padding: 1rem 0">
+                    No surfaces yet. Add the floor, walls or shower you are tiling.
+                  </p>
+                } @else {
+                  <div class="te-surfaces">
+                    @for (surface of room.surfaces; track surface.id) {
+                      <div class="te-surface">
+                        <div class="te-surface__main">
+                          <div class="te-surface__title">
+                            {{ surface.name }}
+                            <span class="te-status te-status--neutral">
+                              {{ surface.type | teStatusLabel }}
+                            </span>
+                          </div>
+                          <div class="te-surface__dims">{{ surfaceDimensions(surface) }}</div>
+
+                          <div class="te-surface__meta">
+                            @if (surface.tileName) {
+                              <span><mat-icon class="te-inline-icon">grid_on</mat-icon> {{ surface.tileName }}</span>
+                            }
+                            @if (surface.patternName) {
+                              <span><mat-icon class="te-inline-icon">view_module</mat-icon> {{ surface.patternName }}</span>
+                            }
+                            @if (surface.assemblyName) {
+                              <span><mat-icon class="te-inline-icon">layers</mat-icon> {{ surface.assemblyName }}</span>
+                            }
+                            @if (surface.wasteOverridePercentage !== null) {
+                              <span>
+                                <mat-icon class="te-inline-icon">tune</mat-icon>
+                                Waste {{ surface.wasteOverridePercentage | tePercent }} (override)
+                              </span>
+                            }
+                            @if (surface.trimLinearFeet > 0) {
+                              <span>
+                                <mat-icon class="te-inline-icon">straighten</mat-icon>
+                                Trim {{ surface.trimLinearFeet | teQuantity: 'LF' }}
+                              </span>
+                            }
+                          </div>
+
+                          @if (surface.openings.length > 0) {
+                            <div class="te-openings">
+                              @for (opening of surface.openings; track opening.id) {
+                                <span class="te-opening" [class.te-opening--adds]="opening.addsArea">
+                                  {{ opening.addsArea ? '+' : '−' }}
+                                  {{ opening.name }}
+                                  {{ opening.widthFeet }}'×{{ opening.heightFeet }}'
+                                  @if (opening.quantity > 1) {
+                                    ×{{ opening.quantity }}
+                                  }
+                                  <button
+                                    mat-icon-button
+                                    class="te-opening__remove"
+                                    (click)="deleteOpening(surface, opening.id)"
+                                    *teHasPermission="'project.update'"
+                                  >
+                                    <mat-icon>close</mat-icon>
+                                  </button>
+                                </span>
+                              }
+                            </div>
+                          }
+                        </div>
+
+                        <div class="te-surface__actions" *teHasPermission="'project.update'">
+                          <button mat-icon-button (click)="addOpening(surface)" matTooltip="Add an opening">
+                            <mat-icon>door_front</mat-icon>
+                          </button>
+                          <button mat-icon-button (click)="editSurface(room, surface)" matTooltip="Edit surface">
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                          <button mat-icon-button (click)="deleteSurface(room, surface)" matTooltip="Delete surface">
+                            <mat-icon>delete_outline</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Takeoff -->
+      <mat-tab label="Takeoff">
+        <div class="te-tab-body">
+          <div class="te-page__header">
+            <div>
+              <h2 style="margin: 0">Material takeoff</h2>
+              <p class="te-muted" style="margin: 0.25rem 0 0; font-size: 0.875rem">
+                Quantities calculated by the server's takeoff engine. Every line shows its own
+                arithmetic.
+              </p>
+            </div>
+            <button mat-flat-button color="primary" (click)="runTakeoff()" [disabled]="takeoffLoading()">
+              <mat-icon>refresh</mat-icon>
+              @if (takeoffLoading()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                Calculate
+              }
+            </button>
+          </div>
+
+          @if (takeoffError()) {
+            <div class="te-card" style="border-color: #d88; color: #9b1c1c">
+              <mat-icon class="te-inline-icon">error_outline</mat-icon>
+              {{ takeoffError() }}
+            </div>
+          } @else if (takeoff(); as result) {
+            <div class="te-grid te-grid--kpis" style="margin-bottom: 1rem">
+              <div class="te-card">
+                <span class="te-kpi-label">Net area</span>
+                <div class="te-money te-money--large">
+                  {{ result.totalNetAreaSquareFeet | teQuantity: 'SF' }}
+                </div>
+              </div>
+              <div class="te-card">
+                <span class="te-kpi-label">With waste</span>
+                <div class="te-money te-money--large">
+                  {{ result.totalAdjustedAreaSquareFeet | teQuantity: 'SF' }}
+                </div>
+              </div>
+              <div class="te-card">
+                <span class="te-kpi-label">Material cost</span>
+                <div class="te-money te-money--large">{{ result.totalMaterialCost | teMoney }}</div>
+              </div>
+              <div class="te-card">
+                <span class="te-kpi-label">Labor cost</span>
+                <div class="te-money te-money--large">{{ result.totalLaborCost | teMoney }}</div>
+              </div>
+            </div>
+
+            @for (surface of result.surfaces; track surface.surfaceId) {
+              <div class="te-card" style="margin-bottom: 1rem">
+                <h3 class="te-card__title">{{ surface.surfaceName }}</h3>
+
+                <div class="te-area-summary">
+                  <div>
+                    <span class="te-kpi-label">Gross</span>
+                    <div>{{ surface.grossAreaSquareFeet | teQuantity: 'SF' }}</div>
+                  </div>
+                  <div>
+                    <span class="te-kpi-label">Openings</span>
+                    <div>
+                      −{{ surface.openingDeductionSquareFeet | teQuantity: 'SF' }}
+                      @if (surface.openingAdditionSquareFeet > 0) {
+                        / +{{ surface.openingAdditionSquareFeet | teQuantity: 'SF' }}
+                      }
+                    </div>
+                  </div>
+                  <div>
+                    <span class="te-kpi-label">Net</span>
+                    <div>{{ surface.netAreaSquareFeet | teQuantity: 'SF' }}</div>
+                  </div>
+                  <div>
+                    <span class="te-kpi-label">Waste</span>
+                    <div [matTooltip]="surface.wasteExplanation">
+                      {{ surface.wastePercentage | tePercent }}
+                      <mat-icon class="te-inline-icon">info_outline</mat-icon>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="te-kpi-label">Adjusted</span>
+                    <div style="font-weight: 700">
+                      {{ surface.adjustedAreaSquareFeet | teQuantity: 'SF' }}
+                    </div>
+                  </div>
+                </div>
+
+                <p class="te-calculation">{{ surface.calculation }}</p>
+
+                <div class="te-table-wrapper" style="margin-top: 0.75rem">
+                  <table mat-table [dataSource]="surface.lines" class="te-table">
+                    <ng-container matColumnDef="description">
+                      <th mat-header-cell *matHeaderCellDef>Item</th>
+                      <td mat-cell *matCellDef="let line">
+                        <div style="font-weight: 600">{{ line.description }}</div>
+                        <div class="te-calculation">{{ line.calculation }}</div>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="quantity">
+                      <th mat-header-cell *matHeaderCellDef class="te-numeric">Calculated</th>
+                      <td mat-cell *matCellDef="let line" class="te-numeric">
+                        {{ line.quantity | teQuantity: line.unit }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="purchase">
+                      <th mat-header-cell *matHeaderCellDef class="te-numeric">To buy</th>
+                      <td mat-cell *matCellDef="let line" class="te-numeric" style="font-weight: 600">
+                        {{ line.purchaseQuantity | teQuantity: line.unit }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="unitPrice">
+                      <th mat-header-cell *matHeaderCellDef class="te-numeric">Unit price</th>
+                      <td mat-cell *matCellDef="let line" class="te-numeric">
+                        {{ line.unitPrice | teMoney }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="total">
+                      <th mat-header-cell *matHeaderCellDef class="te-numeric">Total</th>
+                      <td mat-cell *matCellDef="let line" class="te-numeric te-money">
+                        {{ line.totalPrice | teMoney }}
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="takeoffColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: takeoffColumns"></tr>
+                  </table>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="te-card te-empty-state">
+              <mat-icon class="te-empty-state__icon">straighten</mat-icon>
+              <p class="te-empty-state__title">Nothing calculated yet</p>
+              <p class="te-empty-state__text">
+                Run the takeoff to see tile, materials and labor for every surface on this project.
+              </p>
+              <button mat-flat-button color="primary" (click)="runTakeoff()">Calculate takeoff</button>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Estimates -->
+      <mat-tab [label]="'Estimates (' + estimates().length + ')'">
+        <div class="te-tab-body">
+          @if (estimates().length === 0) {
+            <div class="te-card te-empty-state">
+              <mat-icon class="te-empty-state__icon">calculate</mat-icon>
+              <p class="te-empty-state__title">No estimates yet</p>
+              <p class="te-empty-state__text">
+                An estimate expands every surface into priced lines you can edit.
+              </p>
+              <button
+                mat-flat-button
+                color="primary"
+                (click)="createEstimate()"
+                [disabled]="surfaceCount() === 0"
+                *teHasPermission="'estimate.create'"
+              >
+                Create estimate
+              </button>
+            </div>
+          } @else {
+            <ul class="te-record-list">
+              @for (estimate of estimates(); track estimate.id) {
+                <li class="te-record">
+                  <a [routerLink]="['/estimates', estimate.id]" class="te-record__main">
+                    <span class="te-record__title">{{ estimate.displayNumber }}</span>
+                    <span class="te-record__meta">Created {{ estimate.createdAt | teDate }}</span>
+                  </a>
+                  <span class="te-status" [class]="estimate.status | teStatusClass">
+                    {{ estimate.status | teStatusLabel }}
+                  </span>
+                  <span class="te-money te-money--large">{{ estimate.grandTotal | teMoney }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Quotes -->
+      <mat-tab [label]="'Quotes (' + quotes().length + ')'">
+        <div class="te-tab-body">
+          @if (quotes().length === 0) {
+            <div class="te-card te-empty-state">
+              <mat-icon class="te-empty-state__icon">request_quote</mat-icon>
+              <p class="te-empty-state__title">No quotes yet</p>
+              <p class="te-empty-state__text">
+                Finalize an estimate, then convert it into a quote for the customer.
+              </p>
+            </div>
+          } @else {
+            <ul class="te-record-list">
+              @for (quote of quotes(); track quote.id) {
+                <li class="te-record">
+                  <a [routerLink]="['/quotes', quote.id]" class="te-record__main">
+                    <span class="te-record__title">{{ quote.quoteNumber }}</span>
+                    <span class="te-record__meta">
+                      {{ quote.quoteDate | teDate }} · expires {{ quote.expiresAt | teDate }}
+                    </span>
+                  </a>
+                  <span class="te-status" [class]="quote.status | teStatusClass">
+                    {{ quote.status | teStatusLabel }}
+                  </span>
+                  <span class="te-money te-money--large">{{ quote.grandTotal | teMoney }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Notes -->
+      <mat-tab [label]="'Notes (' + notes().length + ')'">
+        <div class="te-tab-body">
+          <div class="te-card" style="margin-bottom: 1rem" *teHasPermission="'project.update'">
+            <form [formGroup]="noteForm" (ngSubmit)="addNote()">
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Add a note</mat-label>
+                <textarea matInput formControlName="body" rows="3"></textarea>
+              </mat-form-field>
+              <div class="te-form-actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="noteForm.invalid">
+                  Add note
+                </button>
+              </div>
+            </form>
+          </div>
+
+          @if (notes().length === 0) {
+            <p class="te-muted">No notes on this project yet.</p>
+          } @else {
+            @for (note of notes(); track note.id) {
+              <div class="te-card" style="margin-bottom: 0.75rem">
+                <p style="margin: 0 0 0.5rem; white-space: pre-wrap">{{ note.body }}</p>
+                <span class="te-muted" style="font-size: 0.75rem">
+                  {{ note.createdAt | teDate: true }}
+                </span>
+              </div>
+            }
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+}

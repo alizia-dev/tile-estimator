@@ -1,0 +1,344 @@
+// The customer-facing page. Most people open this on a phone, from an email, and want to know
+// one thing first: what does it cost? So the total is the largest element, the itemisation sits
+// below it, and the accept/decline buttons are full-width tap targets.
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f2f4f7;
+  padding: 1rem;
+}
+
+.te-pq {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+.te-pq__centre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 1rem;
+}
+
+.te-pq__card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgb(16 24 40 / 10%);
+}
+
+.te-pq__card--message {
+  max-width: 26rem;
+  text-align: center;
+
+  h1 {
+    font-size: 1.25rem;
+    margin: 0.75rem 0 0.5rem;
+  }
+
+  p {
+    margin: 0;
+    opacity: 0.7;
+    line-height: 1.6;
+  }
+}
+
+.te-pq__big-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  opacity: 0.35;
+}
+
+// --- Header -------------------------------------------------------------------------------------
+
+.te-pq__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 0 1.25rem;
+}
+
+.te-pq__company-name {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #14487f;
+}
+
+.te-pq__company-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.875rem;
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  color: #55606e;
+}
+
+.te-pq__quote-meta {
+  text-align: right;
+}
+
+.te-pq__quote-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #55606e;
+}
+
+.te-pq__quote-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.te-pq__quote-dates {
+  font-size: 0.75rem;
+  color: #55606e;
+}
+
+// --- Banners -------------------------------------------------------------------------------------
+
+.te-pq__banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  background: #e4effd;
+  color: #14487f;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.te-pq__banner--success {
+  background: #e3f5e8;
+  color: #15633a;
+}
+
+.te-pq__banner--danger {
+  background: #fde8e8;
+  color: #9b1c1c;
+}
+
+// --- Hero total ------------------------------------------------------------------------------------
+
+.te-pq__hero {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.te-pq__hero-label {
+  font-size: 0.8125rem;
+  color: #55606e;
+}
+
+.te-pq__project {
+  margin: 0.375rem 0 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+// The number the customer came for.
+.te-pq__hero-total {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #14487f;
+  font-variant-numeric: tabular-nums;
+}
+
+.te-pq__hero-hint {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  color: #55606e;
+}
+
+// --- Sections ---------------------------------------------------------------------------------------
+
+.te-pq__section-title {
+  margin: 0 0 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #55606e;
+}
+
+.te-pq__scope,
+.te-pq__terms {
+  margin: 0;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.te-pq__terms {
+  font-size: 0.8125rem;
+  color: #55606e;
+}
+
+// --- Lines -------------------------------------------------------------------------------------------
+
+.te-pq__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.te-pq__line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e7eaee;
+}
+
+.te-pq__line-main {
+  min-width: 0;
+}
+
+.te-pq__line-description {
+  font-weight: 600;
+}
+
+.te-pq__line-meta {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: #55606e;
+}
+
+.te-pq__line-total {
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.te-pq__totals {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+}
+
+.te-pq__total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3125rem 0;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.te-pq__total-row--divider {
+  margin-top: 0.25rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid #e7eaee;
+  font-weight: 600;
+}
+
+.te-pq__total-row--discount {
+  color: #15633a;
+}
+
+.te-pq__total-row--grand {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #14487f;
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+// --- Response ---------------------------------------------------------------------------------------
+
+.te-pq__respond {
+  border: 2px solid #14487f;
+}
+
+.te-pq__respond-hint {
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+
+// Stacked full-width buttons: easy to hit on a phone, and impossible to mis-tap.
+.te-pq__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.te-pq__choice {
+  width: 100%;
+  height: 3rem;
+  font-size: 1rem;
+}
+
+.te-pq__choice--decline {
+  color: #9b1c1c;
+}
+
+.te-pq__field {
+  width: 100%;
+}
+
+.te-pq__respond-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.te-pq__legal {
+  margin: 1rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.55;
+  color: #55606e;
+}
+
+// --- Footer -------------------------------------------------------------------------------------------
+
+.te-pq__footer {
+  text-align: center;
+  padding-top: 1rem;
+}
+
+.te-pq__footer-note {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.8125rem;
+  color: #55606e;
+}
+
+.te-pq__footer-company {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #8a94a3;
+}
+
+@media (max-width: 640px) {
+  :host {
+    padding: 0.5rem;
+  }
+
+  .te-pq__card {
+    padding: 1.125rem;
+  }
+
+  .te-pq__header {
+    padding: 1rem 0;
+  }
+
+  .te-pq__quote-meta {
+    text-align: left;
+  }
+
+  .te-pq__hero-total {
+    font-size: 2.5rem;
+  }
+}

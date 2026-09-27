@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TileEstimator.Api/TileEstimator.Api.csproj" />
+    <Project Path="src/TileEstimator.Application/TileEstimator.Application.csproj" />
+    <Project Path="src/TileEstimator.Contracts/TileEstimator.Contracts.csproj" />
+    <Project Path="src/TileEstimator.Domain/TileEstimator.Domain.csproj" />
+    <Project Path="src/TileEstimator.Infrastructure/TileEstimator.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TileEstimator.ApiTests/TileEstimator.ApiTests.csproj" />
+    <Project Path="tests/TileEstimator.ArchitectureTests/TileEstimator.ArchitectureTests.csproj" />
+    <Project Path="tests/TileEstimator.IntegrationTests/TileEstimator.IntegrationTests.csproj" />
+    <Project Path="tests/TileEstimator.UnitTests/TileEstimator.UnitTests.csproj" />
+  </Folder>
+</Solution>

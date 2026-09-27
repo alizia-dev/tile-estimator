@@ -1,0 +1,163 @@
+.te-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+
+  &__toolbar {
+    position: relative;
+    z-index: 3;
+    gap: 0.5rem;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  &__brand-icon {
+    opacity: 0.85;
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+
+  &__org-button,
+  &__org-static {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    white-space: nowrap;
+  }
+
+  &__org-static {
+    padding: 0 0.75rem;
+  }
+
+  &__org-name {
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__org-role {
+    margin-left: auto;
+    padding-left: 1rem;
+    opacity: 0.6;
+    font-size: 0.75rem;
+  }
+
+  &__avatar-button {
+    margin-left: 0.25rem;
+  }
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 20%);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  &__user-header {
+    display: block;
+    height: auto;
+    padding-block: 0.5rem;
+    line-height: 1.4;
+  }
+
+  &__user-name {
+    font-weight: 600;
+  }
+
+  &__user-email,
+  &__user-role {
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  // A quiet strip rather than a modal: it is a nudge, not a blocker.
+  &__banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fff4e5;
+    color: #8a5300;
+    font-size: 0.875rem;
+    border-bottom: 1px solid #ffd9a0;
+
+    mat-icon {
+      font-size: 1.125rem;
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
+
+  &__container {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  &__sidenav {
+    width: 15rem;
+    border-right: 1px solid rgb(0 0 0 / 10%);
+  }
+
+  &__nav-item--active {
+    // The active destination should be obvious at a glance from across a desk.
+    background: rgb(25 118 210 / 10%);
+    font-weight: 600;
+  }
+
+  &__content {
+    padding: 1.5rem;
+    background: #f6f7f9;
+  }
+}
+
+// Tablet and below: the drawer overlays instead of pushing the content into a narrow column.
+@media (max-width: 1024px) {
+  .te-shell {
+    &__sidenav {
+      width: 13.5rem;
+    }
+
+    &__content {
+      padding: 1rem;
+    }
+
+    &__brand-text {
+      display: none;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .te-shell {
+    &__content {
+      background: #14161a;
+    }
+
+    &__banner {
+      background: #3a2a10;
+      color: #ffd9a0;
+      border-bottom-color: #55401a;
+    }
+
+    &__nav-item--active {
+      background: rgb(100 181 246 / 16%);
+    }
+  }
+}

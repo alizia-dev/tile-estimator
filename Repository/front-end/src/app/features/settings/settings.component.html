@@ -1,0 +1,330 @@
+<div class="te-page">
+  <header class="te-page__header">
+    <div>
+      <h1 class="te-page__title">Settings</h1>
+      <p class="te-page__subtitle">Your company details, estimating defaults and the people who use them.</p>
+    </div>
+    <div class="te-page__actions">
+      <a mat-stroked-button routerLink="audit" *teHasPermission="'audit.read'">
+        <mat-icon>fact_check</mat-icon>
+        Audit log
+      </a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div style="display: flex; justify-content: center; padding: 3rem">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else {
+    <mat-tab-group animationDuration="150ms">
+      <!-- Company -->
+      <mat-tab label="Company">
+        <div class="te-tab-body">
+          <div class="te-card" style="max-width: 52rem">
+            <h2 class="te-card__title">Company details</h2>
+            <p class="te-muted" style="margin-top: -0.5rem; font-size: 0.8125rem">
+              These appear at the top of every quote you send.
+            </p>
+
+            <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+              <div class="te-form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Company name</mat-label>
+                  <input matInput formControlName="name" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Legal name</mat-label>
+                  <input matInput formControlName="legalName" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Email</mat-label>
+                  <input matInput type="email" formControlName="email" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Phone</mat-label>
+                  <input matInput formControlName="phone" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Website</mat-label>
+                  <input matInput formControlName="website" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>License number</mat-label>
+                  <input matInput formControlName="licenseNumber" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="te-field-full">
+                  <mat-label>Street address</mat-label>
+                  <input matInput formControlName="line1" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>City</mat-label>
+                  <input matInput formControlName="city" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>State</mat-label>
+                  <input matInput formControlName="state" maxlength="2" style="text-transform: uppercase" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>ZIP</mat-label>
+                  <input matInput formControlName="postalCode" />
+                </mat-form-field>
+              </div>
+
+              <div class="te-form-actions" *teHasPermission="'settings.manage'">
+                <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                  Save company details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Estimating defaults -->
+      <mat-tab label="Estimating defaults">
+        <div class="te-tab-body">
+          <div class="te-card" style="max-width: 52rem">
+            <h2 class="te-card__title">Pricing defaults</h2>
+            <p class="te-muted" style="margin-top: -0.5rem; font-size: 0.8125rem">
+              Applied to new estimates. An estimate already in progress keeps the configuration it
+              was created with, so changing these never moves an existing number.
+            </p>
+
+            <form [formGroup]="pricingForm" (ngSubmit)="savePricing()">
+              <div class="te-form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Default pricing strategy</mat-label>
+                  <mat-select formControlName="defaultPricingStrategy">
+                    <mat-option value="Markup">Markup</mat-option>
+                    <mat-option value="Margin">Gross margin</mat-option>
+                    <mat-option value="FixedMarkup">Fixed amount</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Default markup %</mat-label>
+                  <input matInput type="number" step="0.1" min="0" formControlName="defaultMarkupPercentage" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Default margin %</mat-label>
+                  <input matInput type="number" step="0.1" min="0" max="99.99" formControlName="defaultMarginPercentage" />
+                  <mat-hint>Must stay below 100%.</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Default overhead %</mat-label>
+                  <input matInput type="number" step="0.1" min="0" formControlName="defaultOverheadPercentage" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Default tax rate %</mat-label>
+                  <input matInput type="number" step="0.001" min="0" formControlName="defaultTaxRatePercentage" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Tax applies to</mat-label>
+                  <mat-select formControlName="taxBasis">
+                    <mat-option value="MaterialsAndLabor">Materials and labor</mat-option>
+                    <mat-option value="MaterialsOnly">Materials only</mat-option>
+                    <mat-option value="LaborOnly">Labor only</mat-option>
+                  </mat-select>
+                  <mat-hint>States differ on whether labor is taxable.</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Quote validity (days)</mat-label>
+                  <input matInput type="number" step="1" min="1" formControlName="quoteValidityDays" />
+                </mat-form-field>
+              </div>
+
+              <mat-checkbox formControlName="discountBeforeTax" style="margin-bottom: 1rem">
+                Apply discounts before tax
+              </mat-checkbox>
+
+              <h3 class="te-settings-section">Document numbering</h3>
+              <div class="te-form-grid te-form-grid--narrow">
+                <mat-form-field appearance="outline">
+                  <mat-label>Customer prefix</mat-label>
+                  <input matInput formControlName="customerNumberPrefix" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Project prefix</mat-label>
+                  <input matInput formControlName="projectNumberPrefix" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Estimate prefix</mat-label>
+                  <input matInput formControlName="estimateNumberPrefix" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Quote prefix</mat-label>
+                  <input matInput formControlName="quoteNumberPrefix" />
+                </mat-form-field>
+              </div>
+
+              <h3 class="te-settings-section">Quote wording</h3>
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Terms and conditions</mat-label>
+                <textarea matInput formControlName="quoteTermsAndConditions" rows="5"></textarea>
+                <mat-hint>Printed on every proposal.</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" style="width: 100%">
+                <mat-label>Footer note</mat-label>
+                <input matInput formControlName="quoteFooterNote" />
+              </mat-form-field>
+
+              <div class="te-form-actions" *teHasPermission="'settings.manage'">
+                <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                  Save defaults
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- People -->
+      <mat-tab [label]="'People (' + members().length + ')'">
+        <div class="te-tab-body">
+          <div class="te-card" style="margin-bottom: 1rem" *teHasPermission="'users.invite'">
+            <h2 class="te-card__title">Invite someone</h2>
+            <form [formGroup]="inviteForm" (ngSubmit)="invite()" class="te-inline-form">
+              <mat-form-field appearance="outline">
+                <mat-label>Email address</mat-label>
+                <input matInput type="email" formControlName="email" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Role</mat-label>
+                <mat-select formControlName="roleName">
+                  @for (role of roles; track role) {
+                    <mat-option [value]="role">{{ role }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+                <mat-icon>mail</mat-icon>
+                Send invitation
+              </button>
+            </form>
+          </div>
+
+          <div class="te-table-wrapper" style="margin-bottom: 1.5rem">
+            <table mat-table [dataSource]="members()" class="te-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let m" style="font-weight: 600">
+                  {{ m.firstName }} {{ m.lastName }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let m">
+                  {{ m.email }}
+                  @if (!m.emailConfirmed) {
+                    <mat-icon class="te-inline-icon" matTooltip="Email not confirmed yet" style="color: #8a5300">
+                      mark_email_unread
+                    </mat-icon>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="role">
+                <th mat-header-cell *matHeaderCellDef>Role</th>
+                <td mat-cell *matCellDef="let m">
+                  <div *teHasPermission="'users.manage'">
+                    <mat-select
+                      [value]="m.roleName"
+                      (selectionChange)="changeRole(m, $event.value)"
+                      class="te-role-select"
+                    >
+                      @for (role of roles; track role) {
+                        <mat-option [value]="role">{{ role }}</mat-option>
+                      }
+                    </mat-select>
+                  </div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let m">
+                  <span class="te-status" [class]="m.isActive ? 'te-status--success' : 'te-status--muted'">
+                    {{ m.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="lastLogin">
+                <th mat-header-cell *matHeaderCellDef>Last sign-in</th>
+                <td mat-cell *matCellDef="let m">{{ m.lastLoginAt | teDate: true }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let m">
+                  <button
+                    mat-icon-button
+                    (click)="toggleActive(m)"
+                    [matTooltip]="m.isActive ? 'Deactivate' : 'Reactivate'"
+                    *teHasPermission="'users.manage'"
+                  >
+                    <mat-icon>{{ m.isActive ? 'person_off' : 'person_add' }}</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="memberColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: memberColumns"></tr>
+            </table>
+          </div>
+
+          @if (invitations().length > 0) {
+            <h2 style="font-size: 1rem; margin-bottom: 0.75rem">Invitations</h2>
+            <div class="te-table-wrapper">
+              <table mat-table [dataSource]="invitations()" class="te-table">
+                <ng-container matColumnDef="email">
+                  <th mat-header-cell *matHeaderCellDef>Email</th>
+                  <td mat-cell *matCellDef="let i">{{ i.email }}</td>
+                </ng-container>
+                <ng-container matColumnDef="role">
+                  <th mat-header-cell *matHeaderCellDef>Role</th>
+                  <td mat-cell *matCellDef="let i">{{ i.roleName }}</td>
+                </ng-container>
+                <ng-container matColumnDef="expires">
+                  <th mat-header-cell *matHeaderCellDef>Expires</th>
+                  <td mat-cell *matCellDef="let i">{{ i.expiresAt | teDate }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let i">
+                    <span class="te-status" [class]="i.isPending ? 'te-status--info' : 'te-status--muted'">
+                      {{ i.isPending ? 'Pending' : 'Closed' }}
+                    </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let i">
+                    @if (i.isPending) {
+                      <button
+                        mat-icon-button
+                        (click)="revokeInvitation(i)"
+                        matTooltip="Revoke"
+                        *teHasPermission="'users.invite'"
+                      >
+                        <mat-icon>cancel</mat-icon>
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="invitationColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: invitationColumns"></tr>
+              </table>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

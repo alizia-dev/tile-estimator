@@ -1,0 +1,44 @@
+.te-tab-body {
+  padding-top: 1.25rem;
+}
+
+.te-tab-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+// The inline editor sits above the table it edits, so context stays on screen while typing.
+.te-editor {
+  margin-bottom: 1rem;
+  border-color: var(--mat-sys-primary);
+}
+
+.te-assembly__header {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.te-assembly__items {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.3125rem 0;
+    font-size: 0.875rem;
+  }
+}
+
+.te-assembly__item-name {
+  font-weight: 600;
+  min-width: 14rem;
+}
+
+.te-assembly__item-method {
+  font-size: 0.75rem;
+}
